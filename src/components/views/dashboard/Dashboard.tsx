@@ -30,16 +30,20 @@ import { AppDispatch, RootState } from "@/store/store";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 
-const resourceCategories: { id: number; name: string; resources: ResourceCount[] }[] = [
-  { id: 1, name: "Cloud Provider Accounts", resources: ["Accounts","UserGroups","Users","IdentityProviders"] },
-  { id: 2, name: "Cloud Resources", resources: ["VPC","VM",  "Subnets", "RouteTables", "ACL", "SecurityGroups", "NATGateways", "InternetGateways","CloudRouters","VPCEndpoints","PublicIPAddresses"] },
-  { id: 3, name: "Kubernetes Resources", resources: ["Clusters", "Services", "Pods", "Namespaces"] },
-  { id: 4, name: "Enterprise Resources [ DC | Campus | Edge | User ] ", resources: ["SGT", "VRF", "VLAN"] },
-];
+const resourceCategories:
+  {
+    id: number; name: string; resources: ResourceCount[]
+  }[] = [
+    { id: 1, name: "Cloud Provider Accounts", resources: ["Accounts", "UserGroups", "Users", "IdentityProviders"] },
+    { id: 2, name: "Cloud Resources", resources: ["VPC", "VM", "Subnets", "RouteTables", "ACL", "SecurityGroups", "NATGateways", "InternetGateways", "CloudRouters", "VPCEndpoints", "PublicIPAddresses"] },
+    { id: 3, name: "Kubernetes Resources", resources: ["Clusters", "Services", "Pods", "Namespaces"] },
+    { id: 4, name: "Enterprise Resources [ DC | Campus | Edge | User ] ", resources: ["SGT", "VRF", "VLAN"] },
+  ];
 
 export const Dashboard: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<Source>('All Providers');
-  const { fetchSummary } = useFetchSummary()
+  // OLD UI: blank strings for temporary error handling
+  const { fetchSummary } = useFetchSummary('', '')
   const { count, status } = useSelector((state: RootState) => state.summary);
 
   useEffect(() => fetchSummary(), [])
@@ -82,6 +86,7 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="resource-section">
           <div className="resource-category-section">
+            {/* ---- */}
             {resourceCategories.map(({ id, name, resources }) => (
               <Card key={id} className="resource-category-card">
                 <div className="resource-category">
@@ -102,16 +107,16 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </Card>
-
             ))}
+            {/* ---- */}
           </div>
         </div>
       </div>
       <div className="chart-section">
         <Typography variant="h4">VM States</Typography>
-        <Pie data={vmPieChartData}/>
+        <Pie data={vmPieChartData} />
         <Typography variant="h4">Pod States</Typography>
-        <Pie data={podPieChartData}/>
+        <Pie data={podPieChartData} />
       </div>
     </div>
   );

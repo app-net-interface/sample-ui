@@ -20,6 +20,12 @@
 const path = require(`path`);
 
 module.exports = {
+  style: {
+    postcss: {
+      plugins: [require('tailwindcss')("./tailwind.config.js"), require('autoprefixer')],
+      mode: "file",
+    }
+  },
   devServer: {
     port: 5001,
   },
@@ -30,5 +36,17 @@ module.exports = {
     resolve: {
       process: require.resolve("process/browser"),
     },
+  },
+  configure: {
+    ignoreWarnings: [
+      function ignoreSourcemapsloaderWarnings(warning) {
+        return (
+          warning.module &&
+          warning.module.resource.includes('node_modules') &&
+          warning.details &&
+          warning.details.includes('source-map-loader')
+        )
+      },
+    ],
   },
 };

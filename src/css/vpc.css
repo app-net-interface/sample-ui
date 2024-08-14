@@ -1,0 +1,95 @@
+.input-field {
+    margin-left: 0.25rem;
+    margin-top: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid #D1D5DB;
+    height: 50%;
+}
+
+.button-blue {
+    padding: 0.75rem;
+    margin: 0.25rem;
+    border: none;
+    background-color: #1D4ED8;
+    color: white;
+    cursor: pointer;
+}
+
+.button-blue.selected {
+    background-color: #00437b;
+}
+
+.select-field {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem;
+    border: 1px solid #D1D5DB;
+}
+
+.data-table {
+    width: 100%;
+    white-space: nowrap;
+}
+
+.table-header {
+    background-color: #373737ee;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6B7280;
+    background-color: #F3F4F6;
+}
+
+.table-cell {
+    padding: 0.25rem 1rem;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.table-body {
+    background-color: #FFFFFF;
+    color: #4B5563;
+}
+
+.table-row {
+    cursor: pointer;
+}
+
+.table-row.selected-row {
+    background-color: #BFDBFE;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 20px;
+}
+
+.modal-content {
+    text-align: left;
+}
+
+.modal-content-sections {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.modal-section {
+    flex: 1;
+}
+
+.modal-placeholder {
+    color: black;
+}
+
+.unselectable {
+    user-select: none;
+    /* Standard syntax */
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+}

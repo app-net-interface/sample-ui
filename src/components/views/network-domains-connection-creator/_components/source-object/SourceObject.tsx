@@ -34,7 +34,7 @@ export const SourceObject: FC<SourceObjectProps> = ({ networkDomains }) => {
 
   const destinationId = watch("destination.id");
 
-  const sourceOptions = networkDomains?.map(({ id, name, provider,region}, index) => {
+  const sourceOptions = networkDomains?.map(({ id, name, provider, region }, index) => {
     return {
       label: `${name} ( ${provider} | ${region} | ${id} ) `,
       value: id,
@@ -58,11 +58,11 @@ export const SourceObject: FC<SourceObjectProps> = ({ networkDomains }) => {
           <Tooltip title={Tooltips.NETWORK_DOMAIN} />
           <Select onChange={changeSelectedValue} options={sourceOptions} />
         </FlexItems>
-      ) 
+      )
     },
   ];
 
   return (
-      <Form fields={sourceFields} />
+    <Form fields={sourceFields} />
   );
 };

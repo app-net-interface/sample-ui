@@ -20,6 +20,8 @@
 // TrafficInspectionPolicyForm.tsx
 import React, { useState } from 'react';
 import './Styles.css';
+import DefaultLayout from '@/layout/DefaultLayout';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 
 export const TrafficInspectionPolicyCreator: React.FC = () => {
     const [name, setName] = useState('');
@@ -89,7 +91,7 @@ export const TrafficInspectionPolicyCreator: React.FC = () => {
     // ... rest of the code
 
     return (
-        <div className="container">
+        <DefaultLayout>
             <h1>Traffic Inspection Policy</h1>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
@@ -240,6 +242,6 @@ export const TrafficInspectionPolicyCreator: React.FC = () => {
                 </div>
                 <button type="submit">Submit</button>
             </form>
-        </div>
+        </DefaultLayout>
     );
 };

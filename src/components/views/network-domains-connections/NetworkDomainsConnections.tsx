@@ -5,8 +5,11 @@ import { Wrapper } from "@/components/views/wrapper";
 import { Toolbar } from "./Toolbar";
 import { serverStatus } from "@/common/constants";
 import { useFetchNetworkDomainsConnections } from "@/common/hooks";
-import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel,GridValueGetter } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel, GridValueGetter } from '@mui/x-data-grid';
 import { ConnectionInformation } from "@/_proto/grpc-service/ts/network_domain_connection";
+
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import DefaultLayout from "@/layout/DefaultLayout";
 
 
 export const NetworkDomainsConnections = () => {
@@ -24,7 +27,7 @@ export const NetworkDomainsConnections = () => {
   }, [array]);
 
   const handleRowSelection = (selectionModel: GridRowSelectionModel) => {
-    const selectedData = selectionModel.map((id: number | string) => 
+    const selectedData = selectionModel.map((id: number | string) =>
       connectionData.find(row => row.id === id)
     ).filter((item): item is ConnectionInformation => !!item);
     setSelectedRows(selectedData);
@@ -33,55 +36,56 @@ export const NetworkDomainsConnections = () => {
 
   const columns: GridColDef<ConnectionInformation>[] = [
     { field: 'id', headerName: 'ID', width: 300 },
-    { 
-      field: 'name', 
-      headerName: 'Name', 
-      width: 300, 
-      valueGetter: (value,row) => row?.metadata?.name
-    
+    {
+      field: 'name',
+      headerName: 'Name',
+      width: 300,
+      valueGetter: (value, row) => row?.metadata?.name
+
     },
-    { 
-      field: 'sourceName', 
-      headerName: 'Source Name', 
-      width: 150, 
-      valueGetter: (value,row) => row?.source?.name
+    {
+      field: 'sourceName',
+      headerName: 'Source Name',
+      width: 150,
+      valueGetter: (value, row) => row?.source?.name
     },
-    { 
-      field: 'sourceType', 
-      headerName: 'Source Type', 
-      width: 120, 
-      valueGetter: (value,row) => row?.source?.type
+    {
+      field: 'sourceType',
+      headerName: 'Source Type',
+      width: 120,
+      valueGetter: (value, row) => row?.source?.type
     },
-    { 
-      field: 'sourceProvider', 
-      headerName: 'Source Provider', 
-      width: 120, 
-      valueGetter: (value,row) => row?.source?.provider
+    {
+      field: 'sourceProvider',
+      headerName: 'Source Provider',
+      width: 120,
+      valueGetter: (value, row) => row?.source?.provider
     },
-    { 
-      field: 'destinationName', 
-      headerName: 'Destination Name', 
-      width: 150, 
-      valueGetter: (value,row) => row?.destination?.name
+    {
+      field: 'destinationName',
+      headerName: 'Destination Name',
+      width: 150,
+      valueGetter: (value, row) => row?.destination?.name
     },
-    { 
-      field: 'destinationType', 
-      headerName: 'Destination Type', 
-      width: 120, 
-      valueGetter: (value,row) => row?.destination?.type
+    {
+      field: 'destinationType',
+      headerName: 'Destination Type',
+      width: 120,
+      valueGetter: (value, row) => row?.destination?.type
     },
-    { 
-      field: 'destinationProvider', 
-      headerName: 'Destination Provider', 
-      width: 130, 
-      valueGetter: (value,row) => row?.destination?.provider
+    {
+      field: 'destinationProvider',
+      headerName: 'Destination Provider',
+      width: 130,
+      valueGetter: (value, row) => row?.destination?.provider
     },
     { field: 'status', headerName: 'Status', width: 90 },
   ];
 
 
   return (
-    <Wrapper title="Network Domain Connections">
+    <DefaultLayout>
+      <Breadcrumb pageName="Network Domains Connections" />
       <Toolbar selectedConnections={selectedRows} />
       <div style={{ height: 700, width: '100%' }}>
         <DataGrid
@@ -91,6 +95,6 @@ export const NetworkDomainsConnections = () => {
           onRowSelectionModelChange={handleRowSelection}
         />
       </div>
-    </Wrapper>
+    </DefaultLayout>
   );
 };

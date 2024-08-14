@@ -30,6 +30,13 @@ const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
 const vpcRequest = new ListVPCRequest();
 
+/**
+ * Custom hook to fetch VPC resources from the infrastructure provider.
+ * @param provider - The infrastructure resource provider.
+ * @param accountId - The ID of the account.
+ * @param region - The region to fetch VPCs from.
+ * @returns An object containing the fetched VPCs and a function to fetch VPCs.
+ */
 export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId: string, region: string) => {
   const [vpcs, setVpcs] = useState<any[]>([]);
 
@@ -39,10 +46,14 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
   vpcRequest.setAccountId(accountId);
   vpcRequest.setRegion(region)
 
+  /**
+   * Fetches VPCs from the infrastructure provider.
+   */
   const fetchVpcs = () => {
     try {
       infraSdkResourcesClient.listVPC(vpcRequest, {}, (err: any, response: any) => {
         const data = response?.getVpcsList();
+
         if (data) {
           const infraVpcs = data.map((vpc: any) => {
             const name = vpc.getName();
@@ -56,6 +67,7 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
             const labels: any = {};
 
             const labelsMap = vpc.getLabelsMap();
+            const selfLink = `https://${region}.console.aws.amazon.com/vpcconsole/home?region=${region}#VpcDetails:VpcId=${id}`;
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
@@ -70,10 +82,11 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
               ipv4_cidr,
               ipv6_cidr,
               labels,
+              selfLink,
               accountId,
             };
           });
-          console.log("infra VPCs ", infraVpcs)
+          // console.log("infra VPCs ", infraVpcs)
 
           setVpcs([...infraVpcs]);
         }

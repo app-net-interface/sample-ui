@@ -51,22 +51,38 @@ export const useFetchVpcResourceRouters = (provider: string, region: string, id:
             const region = router.getRegion();
             const asn = router.getAsn()
             const advertised_group = router.getAdvertisedGroup()
+            const advertised_range = router.getAdvertisedRange()
             const labels: any = {};
             const labelsMap = router.getLabelsMap();
+            const provider = router.getProvider();
+            const selfLink = router.getSelfLink();
+            const project = router.getProject();
+            const createdAt = router.getCreatedAt();
+            const vpnType = router.getVpnType();
+            const subnetId = router.getSubnetId();
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
             });
+
+            console.log("CREATED AT: " + createdAt);
 
             return {
               name,
               id,
               accountId,
               region,
+              provider,
               vpcId,
               asn,
               advertised_group,
+              advertised_range,
+              selfLink,
               labels,
+              createdAt,
+              project,
+              vpnType,
+              subnetId,
             };
           });
 

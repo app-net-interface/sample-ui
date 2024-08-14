@@ -20,6 +20,7 @@
 // NetworkLoggingPolicyForm.tsx
 import React, { useState } from 'react';
 import "./Styles.css"
+import DefaultLayout from '@/layout/DefaultLayout';
 
 export const LoggingPolicyCreator: React.FC = () => {
   const [protocol, setProtocol] = useState('tcp');
@@ -50,69 +51,71 @@ export const LoggingPolicyCreator: React.FC = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Traffic Logging Policy</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="protocol">Protocol Filter</label>
-          <select id="protocol" value={protocol} onChange={(e) => setProtocol(e.target.value)} required>
-            <option value="tcp">TCP</option>
-            <option value="udp">UDP</option>
-            <option value="icmp">ICMP</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="logLevel">Log Level</label>
-          <select id="logLevel" value={logLevel} onChange={(e) => setLogLevel(e.target.value)} required>
-            <option value="DEBUG">DEBUG</option>
-            <option value="INFO">INFO</option>
-            <option value="WARNING">WARNING</option>
-            <option value="ERROR">ERROR</option>
-            <option value="CRITICAL">CRITICAL</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="logFormat">Log Format</label>
-          <select id="logFormat" value={logFormat} onChange={(e) => setLogFormat(e.target.value)} required>
-            <option value="json">JSON</option>
-            <option value="xml">XML</option>
-            <option value="csv">CSV</option>
-            <option value="plaintext">Plaintext</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="size">Log Rotation Size (MB)</label>
-          <input type="text" id="size" value={size} onChange={(e) => setSize(e.target.value)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="retentionPeriod">Log Rotation Retention Period (Days)</label>
-          <input type="text" id="retentionPeriod" value={retentionPeriod} onChange={(e) => setRetentionPeriod(e.target.value)} required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="logLocation">Log Location</label>
-          <input type="text" id="logLocation" value={logLocation} onChange={(e) => setLogLocation(e.target.value)} required />
-        </div>
-        <div className="form-group">
-          <label>Log Fields</label>
-          <div className="checkbox-group">
-            {['timestamp', 'sourceIP', 'destinationIP', 'protocol', 'port', 'status'].map((field) => (
-              <div key={field}>
-                <input type="checkbox" id={field} checked={logFields.includes(field)} onChange={() => {
-                  setLogFields((prevLogFields) => {
-                    if (prevLogFields.includes(field)) {
-                      return prevLogFields.filter((f) => f !== field);
-                    } else {
-                      return [...prevLogFields, field];
-                    }
-                  });
-                }} />
-                <label htmlFor={field}>{field}</label>
-              </div>
-            ))}
+    <DefaultLayout>
+      <div className="container">
+        <h1>Traffic Logging Policy</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="protocol">Protocol Filter</label>
+            <select id="protocol" value={protocol} onChange={(e) => setProtocol(e.target.value)} required>
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+              <option value="icmp">ICMP</option>
+            </select>
           </div>
-        </div>
-        <button type="submit">Submit</button>
-      </form>
-    </div>
+          <div className="form-group">
+            <label htmlFor="logLevel">Log Level</label>
+            <select id="logLevel" value={logLevel} onChange={(e) => setLogLevel(e.target.value)} required>
+              <option value="DEBUG">DEBUG</option>
+              <option value="INFO">INFO</option>
+              <option value="WARNING">WARNING</option>
+              <option value="ERROR">ERROR</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="logFormat">Log Format</label>
+            <select id="logFormat" value={logFormat} onChange={(e) => setLogFormat(e.target.value)} required>
+              <option value="json">JSON</option>
+              <option value="xml">XML</option>
+              <option value="csv">CSV</option>
+              <option value="plaintext">Plaintext</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="size">Log Rotation Size (MB)</label>
+            <input type="text" id="size" value={size} onChange={(e) => setSize(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label htmlFor="retentionPeriod">Log Rotation Retention Period (Days)</label>
+            <input type="text" id="retentionPeriod" value={retentionPeriod} onChange={(e) => setRetentionPeriod(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label htmlFor="logLocation">Log Location</label>
+            <input type="text" id="logLocation" value={logLocation} onChange={(e) => setLogLocation(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label>Log Fields</label>
+            <div>
+              {['timestamp', 'sourceIP', 'destinationIP', 'protocol', 'port', 'status'].map((field) => (
+                <div key={field} className="flex items-center gap-2">
+                  <input style={{ width: "10px" }} type="checkbox" id={field} checked={logFields.includes(field)} onChange={() => {
+                    setLogFields((prevLogFields) => {
+                      if (prevLogFields.includes(field)) {
+                        return prevLogFields.filter((f) => f !== field);
+                      } else {
+                        return [...prevLogFields, field];
+                      }
+                    });
+                  }} />
+                  <label htmlFor={field}>{field}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button type="submit">Submit</button>
+        </form>
+      </div >
+    </DefaultLayout >
   );
 };

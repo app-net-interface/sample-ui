@@ -20,7 +20,6 @@
 import React, { FC, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { Wrapper } from "@/components/views/wrapper";
 import { useFetchAppConnections, useFetchNetworkDomainsConnections } from "@/common/hooks";
 import { fetchSLAProfiles } from "@/store/sla-profiles-slice/thunk/slaProfilesThunk";
 import { Button, Collapse, Steps, StepsProps } from "antd";
@@ -46,6 +45,11 @@ import {
   toApplicationConnection
 } from "@/store/application-connection-deployer-slice/applicationConnectionDeployerSlice";
 import { BACKEND_API_PREFIX } from "@/common/constants";
+import DefaultLayout from '../../../layout/DefaultLayout';
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+
+// temporary error solution
+import './error.css'
 
 export const ApplicationPolicyAttachment: FC = () => {
   const {
@@ -71,10 +75,12 @@ export const ApplicationPolicyAttachment: FC = () => {
   const submit = () => {
     Promise.all(appConnections.map(appConnection => appConnectionClient.connectApps(appConnection)))
       .then(() => {
-          fetchAppConnections()
-          navigate(RoutePaths.APPLICATION_CONNECTIONS)
-        }
-      ).catch(error => console.log(error, "Static response"))
+        fetchAppConnections()
+        navigate(RoutePaths.APPLICATION_CONNECTIONS)
+      }
+      ).catch(error => {
+        console.error("Error connecting apps:", error);
+      })
   }
 
   const dispatch = useDispatch<AppDispatch>();
@@ -86,47 +92,48 @@ export const ApplicationPolicyAttachment: FC = () => {
   const steps: { title: string; description?: string, content?: JSX.Element; status?: StepsProps["status"] }[] = [
     {
       title: 'Workload Selection Policy',
-      content: <ApplicationPolicy/>,
+      content: <ApplicationPolicy />,
       description: "Required",
       status: policy === undefined ? "error" : undefined
     },
     {
       title: 'Attach a Security Policy',
-      content: <SecurityPolicy/>,
+      content: <SecurityPolicy />,
       description: "Optional",
     },
     {
       title: 'Attach an Observability Policy',
-      content: <ObservabilityPolicy/>,
+      content: <ObservabilityPolicy />,
       description: "Optional",
     },
     {
       title: 'Attach a Transport',
-      content: <NetworkConfiguration visible={current === 4}/>,
+      content: <NetworkConfiguration visible={current === 4} />,
       description: "Required",
       status: !networkDomainConnectionNames.length ? "error" : undefined
     },
     {
       title: 'Review and Submit',
-      content: <ReviewApplicationConnectionDeployment/>,
+      content: <ReviewApplicationConnectionDeployment />,
       description: "Required",
     },
   ]
   return (
-    <Wrapper title={"Securely Connect Your Application(s) Resources"}>
+    <DefaultLayout>
+      <Breadcrumb pageName="Securely Connect Your Application(s) Resources" />
       <div style={{ marginBottom: "10px" }}>
         <Collapse
           defaultActiveKey={1}
           items={[{
             key: 1,
             label: 'Overview',
-            children: <ApplicationConnectionBackground/>
+            children: <ApplicationConnectionBackground />
           }]}
         />
       </div>
       <Steps current={current} status={steps[current].status}
-             items={steps.map((item) => ({ key: item.title, title: item.title, description: item.description }))}
-             direction={"horizontal"}/>
+        items={steps.map((item) => ({ key: item.title, title: item.title, description: item.description }))}
+        direction={"horizontal"} />
       <div>{steps[current].content}</div>
       <div style={{ marginTop: 24 }}>
         {current < steps.length - 1 && (
@@ -136,7 +143,7 @@ export const ApplicationPolicyAttachment: FC = () => {
         )}
         {current === steps.length - 1 && (
           <Button type="primary" onClick={submit}
-                  disabled={steps[current]?.status === "error"}>
+            disabled={steps[current]?.status === "error"}>
             Submit
           </Button>
         )}
@@ -146,6 +153,6 @@ export const ApplicationPolicyAttachment: FC = () => {
           </Button>
         )}
       </div>
-    </Wrapper>
+    </DefaultLayout>
   );
 };

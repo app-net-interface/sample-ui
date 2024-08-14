@@ -67,9 +67,36 @@ export const Toolbar: FC<ToolbarProps> = ({ selectedAppConnections }) => {
 
   return (
     <section style={{ display: "flex", justifyContent: "flex-end", gap: "20px" }}>
-      <Button onClick={fetchAppConnectionPolicies} variant={ButtonVariants.TERTIARY} iconSrc={refresh}/>
+      <Button onClick={fetchAppConnectionPolicies} variant={ButtonVariants.TERTIARY} text="Refresh" />
       <Dropdown menu={{ items }}>
-        <span style={{ padding: "3px 10px", border: "1px solid gray" }}>Actions</span>
+        <span style={{
+          padding: "8px 12px",
+          border: "none",
+          borderRadius: "5px",
+          backgroundColor: "#007bff",
+          color: "white",
+          cursor: "pointer",
+          display: "inline-block",
+          fontSize: "14px",
+          fontWeight: "bold",
+          margin: "5px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          transition: "background-color 0.3s, box-shadow 0.3s",
+          height: "35px",
+          marginTop: "18px",
+          lineHeight: "19px",
+        }}
+          onMouseOver={({ currentTarget }) => {
+            currentTarget.style.backgroundColor = "#0056b3";
+            currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+          }}
+          onMouseOut={({ currentTarget }) => {
+            currentTarget.style.backgroundColor = "#007bff";
+            currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+          }}
+        >
+          Actions
+        </span>
       </Dropdown>
     </section>
   );

@@ -29,8 +29,11 @@ import { AccessPolicyCreateRequest } from "@/_proto/grpc-service/ts/security_pol
 import { createChannel, createClient } from "nice-grpc-web";
 import { SecurityPolicyServiceDefinition } from "@/_proto/grpc-service/ts/security_policy_service";
 import { Security_AccessPolicy, Security_AccessPolicy_AccessProtocol, Security_PolicyMetadata } from "@/_proto/grpc-service/ts/security_policies";
-import {QueriedNetworkDomain} from "@/store/grpc-network-domains-slice/grpcNetworkDomainsSlice";
+import { QueriedNetworkDomain } from "@/store/grpc-network-domains-slice/grpcNetworkDomainsSlice";
 import { BACKEND_API_PREFIX } from "@/common/constants";
+import DefaultLayout from '../../../layout/DefaultLayout';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
+
 
 const securityPolicyService = createClient(SecurityPolicyServiceDefinition, createChannel(BACKEND_API_PREFIX));
 
@@ -104,98 +107,100 @@ export const AccessControlPolicyCreator: FC = () => {
 
     console.log(accessPolicy);
     securityPolicyService.createAccessPolicy(
-      AccessPolicyCreateRequest.create({accessPolicy: accessPolicy})).then((response) => {
-      openNotification.success(`Access policy successfully created`);
-    }).catch(error =>
-      openNotification.error(`Failure: ${error}`))
-   };
+      AccessPolicyCreateRequest.create({ accessPolicy: accessPolicy })).then((response) => {
+        openNotification.success(`Access policy successfully created`);
+      }).catch(error =>
+        openNotification.error(`Failure: ${error}`))
+  };
 
   return (
-    <div className="container">
-      <h2>Access Control Policy</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Name</label>
-          <input
-            type="text"
-            value={accessPolicy.metadata?.name || ''}
-            onChange={(e) => setAccessPolicy({
-              ...accessPolicy,
-              metadata: {
-                ...accessPolicy.metadata,
-                name: e.target.value,
-                description: accessPolicy.metadata?.description || '',
-                labels: accessPolicy.metadata?.labels || {},
-                creationTimestamp: accessPolicy.metadata?.creationTimestamp || '',
-                modificationTimestamp: accessPolicy.metadata?.modificationTimestamp || '',
-              },
-            })}
-          />
-        </div>
-        <div>
-          <label>Description</label>
-          <input
-            type="text"
-            value={accessPolicy.metadata?.description || ''}
-            onChange={(e) => setAccessPolicy({
-              ...accessPolicy,
-              metadata: {
-                ...accessPolicy.metadata,
-                name: accessPolicy.metadata?.name || '',
-                description: e.target.value,
-                labels: accessPolicy.metadata?.labels || {}, // Ensure labels is an empty object
-                creationTimestamp: accessPolicy.metadata?.creationTimestamp || '',
-                modificationTimestamp: accessPolicy.metadata?.modificationTimestamp || '',
-              },
-            })}
-          />
-        </div>
-        <div>
-          <label>Access Protocols and Ports</label>
-          {accessPolicy.accessProtocols.map((protocol, index) => (
-            <div key={index} className="protocol-row">
-              <input list="protocols" value={protocol.protocol} onChange={(e) => handleProtocolChange(index, 'protocol', e.target.value)} />
-              <datalist id="protocols">
-                <option value="TCP" />
-                <option value="UDP" />
-                <option value="ICMP" />
-                <option value="HTTP" />
-                <option value="HTTPS" />
-                <option value="FTP" />
-                <option value="SSH" />
-                <option value="TELNET" />
-                <option value="SMTP" />
-                <option value="DNS" />
-                <option value="SNMP" />
-                <option value="SMB" />
-                <option value="IMAP" />
-                <option value="POP3" />
-                <option value="LDAP" />
-                <option value="RDP" />
-                <option value="SIP" />
-                <option value="IPSEC" />
-              </datalist>
-              <input
-                type="text"
-                value={protocol.port}
-                onChange={(e) => handleProtocolChange(index, 'port', e.target.value)}
-              />
-              {accessPolicy.accessProtocols.length > 1 && <button type="button" onClick={() => handleRemoveProtocol(index)}>-</button>}
-            </div>
-          ))}
-          <button type="button" onClick={handleAddProtocol}>+</button>
-        </div>
-        <div>
-          <label>Access Type</label>
-          <select value={accessPolicy.accessType} onChange={(e) => setAccessPolicy({ ...accessPolicy, accessType: e.target.value })}>
-            <option value="allow">Allow</option>
-            <option value="deny">Deny</option>
-            <option value="allow-with-logging">Allow with Logging</option>
-            <option value="allow-with-inspection">Allow with Inspection</option>
-          </select>
-        </div>
-        <button type="submit">Submit</button>
-      </form>
-    </div>
+    <DefaultLayout>
+      <Breadcrumb pageName="Access Control Policy Creator" />
+      <div className="container">
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label>Name</label>
+            <input
+              type="text"
+              value={accessPolicy.metadata?.name || ''}
+              onChange={(e) => setAccessPolicy({
+                ...accessPolicy,
+                metadata: {
+                  ...accessPolicy.metadata,
+                  name: e.target.value,
+                  description: accessPolicy.metadata?.description || '',
+                  labels: accessPolicy.metadata?.labels || {},
+                  creationTimestamp: accessPolicy.metadata?.creationTimestamp || '',
+                  modificationTimestamp: accessPolicy.metadata?.modificationTimestamp || '',
+                },
+              })}
+            />
+          </div>
+          <div>
+            <label>Description</label>
+            <input
+              type="text"
+              value={accessPolicy.metadata?.description || ''}
+              onChange={(e) => setAccessPolicy({
+                ...accessPolicy,
+                metadata: {
+                  ...accessPolicy.metadata,
+                  name: accessPolicy.metadata?.name || '',
+                  description: e.target.value,
+                  labels: accessPolicy.metadata?.labels || {}, // Ensure labels is an empty object
+                  creationTimestamp: accessPolicy.metadata?.creationTimestamp || '',
+                  modificationTimestamp: accessPolicy.metadata?.modificationTimestamp || '',
+                },
+              })}
+            />
+          </div>
+          <div>
+            <label>Access Protocols and Ports</label>
+            {accessPolicy.accessProtocols.map((protocol, index) => (
+              <div key={index} className="protocol-row">
+                <input list="protocols" value={protocol.protocol} onChange={(e) => handleProtocolChange(index, 'protocol', e.target.value)} />
+                <datalist id="protocols">
+                  <option value="TCP" />
+                  <option value="UDP" />
+                  <option value="ICMP" />
+                  <option value="HTTP" />
+                  <option value="HTTPS" />
+                  <option value="FTP" />
+                  <option value="SSH" />
+                  <option value="TELNET" />
+                  <option value="SMTP" />
+                  <option value="DNS" />
+                  <option value="SNMP" />
+                  <option value="SMB" />
+                  <option value="IMAP" />
+                  <option value="POP3" />
+                  <option value="LDAP" />
+                  <option value="RDP" />
+                  <option value="SIP" />
+                  <option value="IPSEC" />
+                </datalist>
+                <input
+                  type="text"
+                  value={protocol.port}
+                  onChange={(e) => handleProtocolChange(index, 'port', e.target.value)}
+                />
+                {accessPolicy.accessProtocols.length > 1 && <button type="button" onClick={() => handleRemoveProtocol(index)}>-</button>}
+              </div>
+            ))}
+            <button type="button" onClick={handleAddProtocol}>+</button>
+          </div>
+          <div>
+            <label>Access Type</label>
+            <select value={accessPolicy.accessType} onChange={(e) => setAccessPolicy({ ...accessPolicy, accessType: e.target.value })}>
+              <option value="allow">Allow</option>
+              <option value="deny">Deny</option>
+              <option value="allow-with-logging">Allow with Logging</option>
+              <option value="allow-with-inspection">Allow with Inspection</option>
+            </select>
+          </div>
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    </DefaultLayout>
   );
 };

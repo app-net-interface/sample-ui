@@ -27,7 +27,7 @@ import applicationConnectionsSlice from "@/store/application-connections-slice/a
 import slaProfilesSlice from "@/store/sla-profiles-slice/slaProfilesSlice";
 import accessControlPoliciesSlice from "@/store/access-control-policies-slice/accessControlPoliciesSlice";
 import monitoringPoliciesSlice from "@/store/monitoring-policies-slice/monitoringPoliciesSlice";
-
+import selectedResource from "./selectedRegionAccountId-slice/selectedRegionAccountIdSlice";
 
 import grpcSlaProfilesSlice from "@/store/grpc-sla-profiles-slice/grpcSlaProfilesSlice";
 import infraResourcesSlice from "@/store/infra-resources-slice/infraResourcesSlice";
@@ -45,13 +45,14 @@ export const store = configureStore({
     applicationConnection: applicationConnectionSlice,
     applicationConnectionsList: applicationConnectionsSlice,
     slaProfiles: slaProfilesSlice,
-    monitoringPolicies:monitoringPoliciesSlice,
+    monitoringPolicies: monitoringPoliciesSlice,
     grpcSlaProfiles: grpcSlaProfilesSlice,
     infraResources: infraResourcesSlice,
     applicationConnectionPolicies: applicationConnectionPoliciesSlice,
     applicationConnectionDeployer: applicationConnectionDeployerSlice,
     accessControlPolicies: accessControlPoliciesSlice,
     summary: summarySlice,
+    selectedResources: selectedResource,
   },
 });
 

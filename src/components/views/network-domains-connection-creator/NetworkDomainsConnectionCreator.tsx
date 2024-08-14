@@ -51,6 +51,8 @@ import {
 } from "@/components/views/network-domains-connection-creator/_components/background";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_API_PREFIX } from "@/common/constants";
+import DefaultLayout from '../../../layout/DefaultLayout';
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export const NetworkDomainsConnectionCreator: FC = () => {
   const { data } = useSelector((state: RootState) => state.networkDomains);
@@ -136,44 +138,46 @@ export const NetworkDomainsConnectionCreator: FC = () => {
     {
       title: 'Select Source & Destination',
       content: (<>
-      <SourceObject networkDomains={serverStatus === "live" ? grpcData : data}/>
-      <DestinationObject networkDomains={serverStatus === "live" ? grpcData : data}/>
-      <HorizontalContainer
-        label="Allow All Traffic:"
-        render={
-          <>
-            <Tooltip title={Tooltips.ALLOW_ALL} />
-            <Checkbox name="destination.defaultAccessControl" />
-          </>
-        }
-      />
+        <SourceObject networkDomains={serverStatus === "live" ? grpcData : data} />
+        <DestinationObject networkDomains={serverStatus === "live" ? grpcData : data} />
+        <HorizontalContainer
+          label="Allow All Traffic:"
+          render={
+            <>
+              <div className="mb-1">
+                <Tooltip title={Tooltips.ALLOW_ALL} />
+              </div>
+              <Checkbox name="destination.defaultAccessControl" />
+            </>
+          }
+        />
       </>),
       description: "Required",
-      status:  source?.id === undefined || destination?.id === undefined ? "error" : undefined
+      status: source?.id === undefined || destination?.id === undefined ? "error" : undefined
     },
     //<ComboBox label="Connection Name" formName="name" variant={ComboBoxVariants.INPUT}/>
     //!name ||
     {
       title: 'Secure the connection',
-      content: <SecurityPolicy/>,
+      content: <SecurityPolicy />,
       description: "Optional",
     },
     {
       title: 'Observe the connection',
-      content: <ObservabilityPolicy/>,
+      content: <ObservabilityPolicy />,
       description: "Optional",
     },
     {
       title: 'Attach Network Transport',
-      content: <SlaObject/>,
+      content: <SlaObject />,
       description: "Optional",
     },
     {
       title: 'Review and Submit',
       content:
         (<>
-          <ConnectionDetails/>
-          
+          <ConnectionDetails />
+
         </>),
       description: "Required", // <ConnectionSettings/> <ConnectionDetails/>
       //status: !name ? "error" : undefined
@@ -181,7 +185,8 @@ export const NetworkDomainsConnectionCreator: FC = () => {
   ];
 
   return (
-    <Wrapper title="Network Domain Connection Creator">
+    <DefaultLayout>
+      <Breadcrumb pageName="Network Domains Connection Creator" />
       <FormProvider {...methods}>
         <div style={{ marginBottom: "10px" }}>
           <Collapse
@@ -189,13 +194,13 @@ export const NetworkDomainsConnectionCreator: FC = () => {
             items={[{
               key: 1,
               label: 'Overview',
-              children: <NetworkDomainConnectionBackground/>
+              children: <NetworkDomainConnectionBackground />
             }]}
           />
         </div>
         <Steps current={current} status={steps[current].status}
-               items={steps.map((item) => ({ key: item.title, title: item.title, description: item.description }))}
-               direction={"horizontal"}/>
+          items={steps.map((item) => ({ key: item.title, title: item.title, description: item.description }))}
+          direction={"horizontal"} />
         <div>{steps[current].content}</div>
         <div style={{ marginTop: 24 }}>
           {current < steps.length - 1 && (
@@ -205,7 +210,7 @@ export const NetworkDomainsConnectionCreator: FC = () => {
           )}
           {current === steps.length - 1 && (
             <AButton type="primary" onClick={methods.handleSubmit(onSubmit)}
-                     disabled={steps[current]?.status === "error"}>
+              disabled={steps[current]?.status === "error"}>
               Submit
             </AButton>
           )}
@@ -216,6 +221,6 @@ export const NetworkDomainsConnectionCreator: FC = () => {
           )}
         </div>
       </FormProvider>
-    </Wrapper>
+    </DefaultLayout>
   );
 };

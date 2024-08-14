@@ -25,6 +25,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
 
 import styles from "./data-grid.module.scss";
+import { color } from "d3";
 
 interface DataGridProps {
   rowData: any;
@@ -59,7 +60,7 @@ export const DataGrid: FC<DataGridProps> = ({
   );
 
   return (
-    <div className="ag-theme-material" style={heightAndWidth}>
+    <div className="ag-theme-material" style={{ ...heightAndWidth, backgroundColor: 'transparent' }}>
       <AgGridReact
         ref={ref}
         className={styles.dataGrid}

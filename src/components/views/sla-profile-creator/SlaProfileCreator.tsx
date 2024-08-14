@@ -20,6 +20,8 @@ import React, { useState } from 'react';
 import "./Styles.css"
 import { fetchDataClient, openNotification } from "@/common/utils";
 import { ApiEndpoints } from "@/common/enum";
+import DefaultLayout from '@/layout/DefaultLayout';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 
 export const SlaProfileCreator: React.FC = () => {
   const [name, setName] = useState('');
@@ -81,8 +83,8 @@ export const SlaProfileCreator: React.FC = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Connection SLO</h1>
+    <DefaultLayout>
+      <Breadcrumb pageName="SLA Profile Creator" />
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Name</label>
@@ -182,7 +184,7 @@ export const SlaProfileCreator: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="form-group">
           <label>Schedule</label>
           {schedule.map((period, index) => (
@@ -230,7 +232,7 @@ export const SlaProfileCreator: React.FC = () => {
         </div>
         <button type="submit">Submit</button>
       </form>
-    </div>
+    </DefaultLayout>
   );
 };
 

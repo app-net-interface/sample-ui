@@ -48,16 +48,23 @@ export const useFetchVpcResourceVms = (provider: string, region: string, id: str
             const id = instance.getId();
             const accountId = instance.getAccountId();
             const provider = instance.getProvider().toUpperCase();
+            const region = instance.getRegion();
             const type = instance.getType();
             const subnetId = instance.getSubnetid();
             const publicIp = instance.getPublicip();
             const privateIp = instance.getPrivateip();
-            const state     = instance.getState();
+            const state = instance.getState();
             const labels: any = {};
             const labelsMap = instance.getLabelsMap();
+            const vpcId = instance.getVpcid();
+            const zone = instance.getZone();
+            const securityGroups = instance.getSecuritygroupidsList();
+            const interfaceIds = instance.getInterfaceidsList();
             let project = ""
             let owner = ""
             let compliant = "No"
+
+            const selfLink = instance.getSelfLink();
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
@@ -65,15 +72,17 @@ export const useFetchVpcResourceVms = (provider: string, region: string, id: str
             if (labels && (("project" in labels) || ("Project" in labels))) {
               project = labels["project"];
             }
-              if (labels && (("owner" in labels)|| ("Owner" in labels))) {
-                owner = labels["owner"];
+            if (labels && (("owner" in labels) || ("Owner" in labels))) {
+              owner = labels["owner"];
             }
-            if ( owner && project ) {
+            if (owner && project) {
               compliant = "Yes"
             }
-            
+
             return {
               name,
+              vpcId,
+              region,
               id,
               accountId,
               provider,
@@ -86,6 +95,10 @@ export const useFetchVpcResourceVms = (provider: string, region: string, id: str
               state,
               labels,
               compliant,
+              selfLink,
+              securityGroups,
+              interfaceIds,
+              zone,
             };
           });
 

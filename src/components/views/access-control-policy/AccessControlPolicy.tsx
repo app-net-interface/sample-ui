@@ -19,7 +19,7 @@
 
 import { ColDef } from "ag-grid-community";
 import { useDispatch, useSelector } from "react-redux";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
 import { DataGrid, TextRowCell } from "@/components/data-grid";
 import { Wrapper } from "@/components/views/wrapper";
@@ -31,8 +31,11 @@ import { setAccessControlPolicies } from "@/store/access-control-policies-slice/
 import { AccessPolicyListRequest } from "@/_proto/grpc-service/ts/security_policy_service";
 import { createChannel, createClient } from "nice-grpc-web";
 import { SecurityPolicyServiceDefinition } from "@/_proto/grpc-service/ts/security_policy_service";
-import {openNotification} from "@/common/utils";
+import { openNotification } from "@/common/utils";
 import { BACKEND_API_PREFIX } from "@/common/constants";
+
+import DefaultLayout from "@/layout/DefaultLayout";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export const AccessControlPolicies = () => {
   const { data } = useSelector((state: RootState) => state.accessControlPolicies);
@@ -57,24 +60,24 @@ export const AccessControlPolicies = () => {
     {
       field: "name",
       headerName: "Name",
-      width:300,
+      width: 300,
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.name} />;
       },
-    
+
     },
     {
       field: "description",
-      width:200,
+      width: 200,
       headerName: "Description",
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.description} />;
       },
-    
+
     },
     {
       field: "priority",
-      width:300,
+      width: 300,
       headerName: "Priority",
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.priority} />;
@@ -83,7 +86,7 @@ export const AccessControlPolicies = () => {
     {
       field: "accessType",
       headerName: "Access Type",
-      width:100,
+      width: 100,
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.accessType} />;
       },
@@ -91,9 +94,10 @@ export const AccessControlPolicies = () => {
 
   ];
 
-  if ( ( data)) {
+  if ((data)) {
     return (
-      <Wrapper title="Access Policies">
+      <DefaultLayout>
+        <Breadcrumb pageName="Access Control Policies" />
         <DataGrid
           rowData={data}
           columnDefs={ColumnsDef}
@@ -102,7 +106,7 @@ export const AccessControlPolicies = () => {
             width: "1600px",
           }}
         />
-      </Wrapper>
+      </DefaultLayout>
     );
   }
 

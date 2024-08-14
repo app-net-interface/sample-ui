@@ -27,7 +27,7 @@ type SelectProps = Pick<
   "options" | "placeholder" | "defaultValue" | "allowClear" | "value" | "disabled"
 > & {
   onChange: any;
-  expand? : boolean
+  expand?: boolean
 };
 
 export const Select: FC<SelectProps> = ({
@@ -42,7 +42,6 @@ export const Select: FC<SelectProps> = ({
 }) => {
   return (
     <AntDSelect
-      style={{...(expand && { width: "100%" })}}
       className={styles.antSelect}
       options={options}
       placeholder={placeholder}

@@ -24,9 +24,9 @@ export enum InfraResourceType {
   ACLS = "Network ACL",
   SECURITY_GROUPS = "Security Group",
   NAT_GATEWAYS = "NAT Gateway",
-  CLOUD_ROUTERS  = "Cloud Router",
+  CLOUD_ROUTERS = "Cloud Router",
   INTERNET_GATEWAYS = "Internet Gateway",
-  VPC_ENDPOINTS   = "VPC Endpoint",
+  VPC_ENDPOINTS = "VPC Endpoint",
   PUBLIC_IPS = "Public IP",
   CLUSTERS = "Cluster",
   ACTIVE_CONNECTIONS = "Active Connections"

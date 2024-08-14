@@ -41,82 +41,109 @@ interface ToolbarProps {
 }
 
 export const Toolbar: FC<ToolbarProps> = ({ selectedAppConnections }) => {
-    const appConnectionService = createClient(AppConnectionControllerDefinition, createChannel(BACKEND_API_PREFIX))
-    const [connectionResources, setConnectionResources] = useState<AppConnectionData>({ config: undefined })
-    const [bottomDrawerVisible, setBottomDrawerVisible] = useState(false);
+  const appConnectionService = createClient(AppConnectionControllerDefinition, createChannel(BACKEND_API_PREFIX))
+  const [connectionResources, setConnectionResources] = useState<AppConnectionData>({ config: undefined })
+  const [bottomDrawerVisible, setBottomDrawerVisible] = useState(false);
 
-    const { fetchAppConnections } = useFetchAppConnections();
+  const { fetchAppConnections } = useFetchAppConnections();
 
-    const handleConfirmDelete = (appConnections: any[]) => {
-      if (serverStatus === "live") {
-        const deleteRequest = AppDisconnectionRequest.create();
-        const connectionIds = appConnections.map((connection: any) => connection.id);
-        console.log(connectionIds);
+  const handleConfirmDelete = (appConnections: any[]) => {
+    if (serverStatus === "live") {
+      const deleteRequest = AppDisconnectionRequest.create();
+      const connectionIds = appConnections.map((connection: any) => connection.id);
+      console.log(connectionIds);
 
-        deleteRequest.connectionId = (connectionIds[0]);
+      deleteRequest.connectionId = (connectionIds[0]);
 
-        appConnectionService.disconnectApps(deleteRequest).then((response) => {
-          // if (error) {
-          //   console.log(error, "Static response");
-          // }
-        });
-
-        // TODO: iterate over array of ids and fire disconnect requests per ID
-        // for (const connectionId of connectionIds) {
-        //   deleteRequest.setConnectionId(connectionId);
-        //
-        //   appConnectionService.delete(deleteRequest, {}, (response: any, error: any) => {
-        //     if (error) {
-        //       console.log(error, "Static response");
-        //     }
-        //   });
+      appConnectionService.disconnectApps(deleteRequest).then((response) => {
+        // if (error) {
+        //   console.log(error, "Static response");
         // }
-      }
-    };
+      });
 
-    const items: MenuProps["items"] = [
-      {
-        key: "1",
-        label: (
-          <Popconfirm
-            disabled={selectedAppConnections.length <= 0}
-            title={"Are you sure you want to delete selected connections?"}
-            onConfirm={() => handleConfirmDelete(selectedAppConnections)}
+      // TODO: iterate over array of ids and fire disconnect requests per ID
+      // for (const connectionId of connectionIds) {
+      //   deleteRequest.setConnectionId(connectionId);
+      //
+      //   appConnectionService.delete(deleteRequest, {}, (response: any, error: any) => {
+      //     if (error) {
+      //       console.log(error, "Static response");
+      //     }
+      //   });
+      // }
+    }
+  };
+
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <Popconfirm
+          disabled={selectedAppConnections.length <= 0}
+          title={"Are you sure you want to delete selected connections?"}
+          onConfirm={() => handleConfirmDelete(selectedAppConnections)}
+        >
+          <span>Delete Connections</span>
+        </Popconfirm>
+      ),
+      disabled: selectedAppConnections.length <= 0,
+    },
+    {
+      key: "2",
+      label: <span>View Matched Resources</span>,
+      disabled: selectedAppConnections.length != 1,
+      onClick: () => {
+        setBottomDrawerVisible(true)
+        setConnectionResources({
+          config: selectedAppConnections[0].appConnectionConfig,
+          from: selectedAppConnections[0].sourceMatched,
+          to: selectedAppConnections[0].destinationMatched
+        })
+      }
+    }
+  ];
+
+  return (
+    <>
+      <section style={{ display: "flex", justifyContent: "flex-end", width: "70%", gap: "20px" }}>
+        <Button onClick={() => fetchAppConnections()} variant={ButtonVariants.TERTIARY} text="Refresh" />
+        <Dropdown menu={{ items }}>
+          <span style={{
+            padding: "8px 12px",
+            border: "none",
+            borderRadius: "5px",
+            backgroundColor: "#1890ff",
+            color: "white",
+            cursor: "pointer",
+            display: "inline-block",
+            fontSize: "14px",
+            fontWeight: "bold",
+            margin: "5px",
+            marginTop: "18px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            transition: "background-color 0.3s, box-shadow 0.3s",
+            height: "35px",
+            lineHeight: "19px", // Added lineHeight to center text vertically
+          }}
+            onMouseOver={({ currentTarget }) => {
+              currentTarget.style.backgroundColor = "#0056b3";
+              currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+            }}
+            onMouseOut={({ currentTarget }) => {
+              currentTarget.style.backgroundColor = "#007bff";
+              currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+            }}
           >
-            <span>Delete Connections</span>
-          </Popconfirm>
-        ),
-        disabled: selectedAppConnections.length <= 0,
-      },
-      {
-        key: "2",
-        label: <span>View Matched Resources</span>,
-        disabled: selectedAppConnections.length != 1,
-        onClick: () => {
-          setBottomDrawerVisible(true)
-          setConnectionResources({
-            config: selectedAppConnections[0].appConnectionConfig,
-            from: selectedAppConnections[0].sourceMatched,
-            to: selectedAppConnections[0].destinationMatched
-          })
-        }
-      }
-    ];
-
-    return (
-      <>
-        <section style={{ display: "flex", justifyContent: "flex-end", width:"70%", gap: "20px" }}>
-          <Button onClick={() => fetchAppConnections()} variant={ButtonVariants.TERTIARY} iconSrc={refresh}/>
-          <Dropdown menu={{ items }}>
-            <span style={{ padding: "3px 10px", border: "1px solid gray" }}>Actions</span>
-          </Dropdown>
-        </section>
-        <BottomDrawer isDrawerVisible={bottomDrawerVisible} setIsDrawerVisible={setBottomDrawerVisible} destroyOnClose>
-          <TableEnvironmentProvider>
-            <AppConnectionResources {...connectionResources}/>
-          </TableEnvironmentProvider>
-        </BottomDrawer>
-      </>
-    );
-  }
-;
+            Actions
+          </span>
+        </Dropdown>
+      </section>
+      <BottomDrawer isDrawerVisible={bottomDrawerVisible} setIsDrawerVisible={setBottomDrawerVisible} destroyOnClose>
+        <TableEnvironmentProvider>
+          <AppConnectionResources {...connectionResources} />
+        </TableEnvironmentProvider>
+      </BottomDrawer>
+    </>
+  );
+}
+  ;

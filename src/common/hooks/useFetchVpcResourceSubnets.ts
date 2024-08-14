@@ -45,13 +45,15 @@ export const useFetchVpcResourceSubnets = (provider: string, region: string, id:
         if (data) {
           const infraSubnets = data.map((subnet: any) => {
             const name = subnet.getName();
-            const id  = subnet.getId();
+            const id = subnet.getId();
             const cidrblock = subnet.getCidrBlock();
             const accountId = subnet.getAccountId();
             const zone = subnet.getZone();
             const region = subnet.getRegion();
             const provider = subnet.getProvider().toUpperCase();
             const vpcId = subnet.getVpcId();
+            const project = subnet.getProject();
+            const selfLink = subnet.getSelfLink();
             const labels: any = {};
             const labelsMap = subnet.getLabelsMap();
             labelsMap.forEach((value: string, key: string) => {
@@ -66,6 +68,8 @@ export const useFetchVpcResourceSubnets = (provider: string, region: string, id:
               accountId,
               region,
               vpcId,
+              project,
+              selfLink,
               zone,
               labels,
             };

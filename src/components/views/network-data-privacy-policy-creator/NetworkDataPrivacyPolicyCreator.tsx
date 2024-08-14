@@ -20,6 +20,8 @@
 // NetworkDataPrivacyPolicyForm.tsx
 import React, { useState } from 'react';
 import "./Styles.css"
+import DefaultLayout from '@/layout/DefaultLayout';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 
 export const NetworkDataPrivacyPolicyCreator: React.FC = () => {
   const [name, setName] = useState('');
@@ -60,8 +62,8 @@ export const NetworkDataPrivacyPolicyCreator: React.FC = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Network Data Privacy Policy</h1>
+    <DefaultLayout>
+      <Breadcrumb pageName="Network Data Privacy Policy Creator" />
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Name</label>
@@ -75,7 +77,7 @@ export const NetworkDataPrivacyPolicyCreator: React.FC = () => {
           <label>IP Address Randomization (IPv6)</label>
           <div className="checkbox-group">
             <div>
-            <label>Source IP Address Randomization</label>
+              <label>Source IP Address Randomization</label>
 
               <input type="checkbox" checked={sourceIpObfuscation} onChange={(e) => setSourceIpObfuscation(e.target.checked)} />
 
@@ -88,7 +90,7 @@ export const NetworkDataPrivacyPolicyCreator: React.FC = () => {
               <label>Group Address Randomization</label>
               <input type="checkbox" checked={destinationIpObfuscation} onChange={(e) => setDestinationIpObfuscation(e.target.checked)} />
             </div>
-            
+
           </div>
         </div>
         <div className="form-group">
@@ -129,6 +131,6 @@ export const NetworkDataPrivacyPolicyCreator: React.FC = () => {
         </div>
         <button type="submit">Submit</button>
       </form>
-    </div>
+    </DefaultLayout>
   );
 };

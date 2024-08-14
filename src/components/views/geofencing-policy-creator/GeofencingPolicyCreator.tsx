@@ -19,6 +19,8 @@
 
 // GeofencingPolicyForm.tsx
 import React, { useState } from 'react';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
+import DefaultLayout from '@/layout/DefaultLayout';
 import './Styles.css';
 
 interface GeoRestriction {
@@ -62,65 +64,68 @@ export const GeofencingPolicyCreator: React.FC = () => {
     };
 
     return (
-        <div className="container">
-            <h1>Geofencing Policy</h1>
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label>Name</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-                </div>
-                <div className="form-group">
-                    <label>Description</label>
-                    <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
-                </div>
-                <div className="form-group">
-                    <label>Geo Restrictions</label>
-                    {geoRestrictions.map((geoRestriction, index) => (
-                        <div key={index} className="input-row">
-                            <input list="regions" value={geoRestriction.region} onChange={(e) => handleGeoRestrictionChange(index, 'region', e.target.value)} required />
-                            <datalist id="regions">
-                                <option value="EEA" />
-                                <option value="Non-EEA" />
-                                <option value="APAC" />
-                                <option value="NAFTA" />
-                                <option value="GCC" />
-                                <option value="MENA" />
-                                <option value="SAARC" />
-                                <option value="ASEAN" />
-                                <option value="CIS" />
-                                <option value="ECOWAS" />
-                                <option value="SADC" />
-                                <option value="MERCOSUR" />
-                                <option value="CARICOM" />
-                                <option value="EU" />
-                                <option value="Schengen Area" />
-                                <option value="Sub-Saharan Africa" />
-                                <option value="North America" />
-                                <option value="South America" />
-                                <option value="Central America" />
-                                <option value="East Asia" />
-                                <option value="Southeast Asia" />
-                                <option value="South Asia" />
-                                <option value="Central Asia" />
-                                <option value="Western Asia" />
-                                <option value="Eastern Europe" />
-                                <option value="Western Europe" />
-                                <option value="Northern Europe" />
-                                <option value="Southern Europe" />
-                            </datalist>
+        <DefaultLayout>
+            <Breadcrumb pageName="Geofencing Policy Creator" />
+            <div className="container">
+                <h1>Geofencing Policy</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Name</label>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                    </div>
+                    <div className="form-group">
+                        <label>Description</label>
+                        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>Geo Restrictions</label>
+                        {geoRestrictions.map((geoRestriction, index) => (
+                            <div key={index} className="input-row">
+                                <input list="regions" value={geoRestriction.region} onChange={(e) => handleGeoRestrictionChange(index, 'region', e.target.value)} required />
+                                <datalist id="regions">
+                                    <option value="EEA" />
+                                    <option value="Non-EEA" />
+                                    <option value="APAC" />
+                                    <option value="NAFTA" />
+                                    <option value="GCC" />
+                                    <option value="MENA" />
+                                    <option value="SAARC" />
+                                    <option value="ASEAN" />
+                                    <option value="CIS" />
+                                    <option value="ECOWAS" />
+                                    <option value="SADC" />
+                                    <option value="MERCOSUR" />
+                                    <option value="CARICOM" />
+                                    <option value="EU" />
+                                    <option value="Schengen Area" />
+                                    <option value="Sub-Saharan Africa" />
+                                    <option value="North America" />
+                                    <option value="South America" />
+                                    <option value="Central America" />
+                                    <option value="East Asia" />
+                                    <option value="Southeast Asia" />
+                                    <option value="South Asia" />
+                                    <option value="Central Asia" />
+                                    <option value="Western Asia" />
+                                    <option value="Eastern Europe" />
+                                    <option value="Western Europe" />
+                                    <option value="Northern Europe" />
+                                    <option value="Southern Europe" />
+                                </datalist>
 
-                            <select value={geoRestriction.action} onChange={(e) => handleGeoRestrictionChange(index, 'action', e.target.value)} required>
-                                <option value="" disabled>Select action</option>
-                                <option value="allow">Allow</option>
-                                <option value="block">Block</option>
-                            </select>
-                            {geoRestrictions.length > 1 && <button type="button" onClick={() => handleRemoveGeoRestriction(index)}>-</button>}
-                        </div>
-                    ))}
-                    <button type="button" onClick={handleAddGeoRestriction}>+</button>
-                </div>
-                <button type="submit">Submit</button>
-            </form>
-        </div>
+                                <select value={geoRestriction.action} onChange={(e) => handleGeoRestrictionChange(index, 'action', e.target.value)} required>
+                                    <option value="" disabled>Select action</option>
+                                    <option value="allow">Allow</option>
+                                    <option value="block">Block</option>
+                                </select>
+                                {geoRestrictions.length > 1 && <button type="button" onClick={() => handleRemoveGeoRestriction(index)}>-</button>}
+                            </div>
+                        ))}
+                        <button type="button" onClick={handleAddGeoRestriction}>+</button>
+                    </div>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        </DefaultLayout>
     );
 };

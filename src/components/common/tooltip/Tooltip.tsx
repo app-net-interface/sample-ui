@@ -27,7 +27,7 @@ type Tooltip = Pick<AntDTooltipProps, "title" | "color">;
 
 export const Tooltip: FC<Tooltip> = ({ color, title }) => {
   return (
-    <AntDTooltip className={styles.tooltip} color={color} title={title}>
+    <AntDTooltip className={styles.tooltip} color={color} title={title} style={{ marginBottom: '10px' }}>
       <InfoCircleTwoTone rev={undefined} />
     </AntDTooltip>
   );

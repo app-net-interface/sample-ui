@@ -49,6 +49,10 @@ import { setPolicy } from "@/store/application-connection-deployer-slice/applica
 import { YAMLSideDrawer } from "@/components/common/yaml-side-drawer";
 import { BACKEND_API_PREFIX } from "@/common/constants";
 
+import DefaultLayout from '../../../layout/DefaultLayout';
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+
+
 export const ApplicationConnectionPolicies = () => {
   const { data } = useSelector((state: RootState) => state.applicationConnectionPolicies);
   const [drawerOpen, setDrawerOpen] = useState(true)
@@ -82,7 +86,7 @@ export const ApplicationConnectionPolicies = () => {
       headerName: "ID",
       valueGetter: (params) => params.data?.id,
       cellRenderer: (params: any) => {
-        return <TextRowCell value={params.value}/>;
+        return <TextRowCell value={params.value} />;
       },
       width: 200,
     },
@@ -90,7 +94,7 @@ export const ApplicationConnectionPolicies = () => {
       headerName: "App Connection Policy Name",
       valueGetter: (params) => params.data?.appConnection?.metadata?.name,
       cellRenderer: (params: any) => {
-        return <TextRowCell value={params.value}/>;
+        return <TextRowCell value={params.value} />;
       },
       width: 300,
     },
@@ -107,7 +111,7 @@ export const ApplicationConnectionPolicies = () => {
           }
         };
         return <Button style={buttonStyle} icon={<img alt={"edit"} className={styles.imgbutton} src={edit}></img>}
-                       onClick={handleEdit} title="Edit"></Button>;
+          onClick={handleEdit} title="Edit"></Button>;
       },
       width: 80,
     }, {
@@ -119,7 +123,7 @@ export const ApplicationConnectionPolicies = () => {
           navigate(RoutePaths.APPLICATION_CONNECTION_ATTACHMENT)
         };
         return <Button style={buttonStyle} icon={<img alt={"deploy"} className={styles.imgbutton} src={upload}></img>}
-                       onClick={handleDeploy} title="Deploy"></Button>;
+          onClick={handleDeploy} title="Deploy"></Button>;
       },
       width: 80,
     },
@@ -135,8 +139,8 @@ export const ApplicationConnectionPolicies = () => {
           }
         };
         return <Button style={buttonStyle}
-                       icon={<img alt={"download"} className={styles.imgbutton} src={download}></img>}
-                       onClick={handleDownload} title="Download"></Button>;
+          icon={<img alt={"download"} className={styles.imgbutton} src={download}></img>}
+          onClick={handleDownload} title="Download"></Button>;
       },
       width: 80,
     },
@@ -155,7 +159,7 @@ export const ApplicationConnectionPolicies = () => {
           }
         };
         return <Button style={buttonStyle} icon={<img alt={"delete"} className={styles.imgbutton} src={trash}></img>}
-                       onClick={deletePolicy} title="Delete"></Button>;
+          onClick={deletePolicy} title="Delete"></Button>;
       },
       width: 80,
     },
@@ -176,8 +180,9 @@ export const ApplicationConnectionPolicies = () => {
 
 
   return (
-    <Wrapper title="Application Connection Policies">
-      <Toolbar selectedAppConnections={selectedRows}/>
+    <DefaultLayout>
+      <Breadcrumb pageName="Application Connection Policies" />
+      <Toolbar selectedAppConnections={selectedRows} />
       <div className="ag-theme-material" style={{
         height: "500px",
         width: "100%",
@@ -192,7 +197,7 @@ export const ApplicationConnectionPolicies = () => {
         />
       </div>
       <YAMLSideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
-                      yamlSource={appConnectionInject(yamlSource)} width={"40%"}/>
-    </Wrapper>
+        yamlSource={appConnectionInject(yamlSource)} width={"40%"} />
+    </DefaultLayout>
   );
 };

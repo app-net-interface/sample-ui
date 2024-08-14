@@ -39,9 +39,9 @@ export const UserApplicationPolicy: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const options = policies.map(policy => ({
-      value: policy.id,
-      label: `${policy.appConnection?.metadata?.name} (${policy.id})`
-    })
+    value: policy.id,
+    label: `${policy.appConnection?.metadata?.name} (${policy.id})`
+  })
   )
 
   const handleChange = (value: string) => {
@@ -51,14 +51,17 @@ export const UserApplicationPolicy: FC = () => {
   return (
     <Wrapper title={"Select 'User->Application' Connection Policy"} expand>
       <p>A user application connection provides connectivity or denies access , for a set of users to a set of applications or to its components, distributed across networking domains like VPCs, VRFs, or VLANs. It ensures seamless communication, adhering to specific access policy and security measures..</p>
-      <div style={{display:"flex", justifyContent:"space-between"}}>
-      <Select
-        options={options}
-        onChange={handleChange}
-        defaultValue={policy}
-        allowClear
-      />
-      <Checkbox defaultChecked>Allow dynamic resourouce selection</Checkbox>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <Select
+          options={options}
+          onChange={handleChange}
+          defaultValue={policy}
+          allowClear
+        />
+        <div className="flex items-center">
+          <Checkbox defaultChecked className="mr-2"></Checkbox>
+          <span>Allow dynamic resource selection</span>
+        </div>
       </div>
     </Wrapper>
   );

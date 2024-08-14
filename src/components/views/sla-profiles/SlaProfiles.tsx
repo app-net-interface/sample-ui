@@ -28,6 +28,9 @@ import { serverStatus } from "@/common/constants";
 import { AppDispatch, RootState } from "@/store/store";
 import { fetchSLAProfiles } from "@/store/sla-profiles-slice/thunk/slaProfilesThunk";
 
+import DefaultLayout from "@/layout/DefaultLayout";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+
 export const SlaProfiles = () => {
   const { data } = useSelector((state: RootState) => state.slaProfiles);
   const { grpcData } = useSelector((state: RootState) => state.grpcSlaProfiles);
@@ -51,7 +54,7 @@ export const SlaProfiles = () => {
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.name} />;
       },
-    
+
     },
     {
       field: "category",
@@ -59,7 +62,7 @@ export const SlaProfiles = () => {
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.category} />;
       },
-   
+
     },
     {
       field: "trafficType",
@@ -74,7 +77,7 @@ export const SlaProfiles = () => {
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.trafficSLO.priority} />;
       },
-      
+
     },
 
     {
@@ -110,24 +113,24 @@ export const SlaProfiles = () => {
     {
       field: "name",
       headerName: "Name",
-      width:300,
+      width: 300,
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.name} />;
       },
-    
+
     },
     {
       field: "category",
-      width:200,
+      width: 200,
       headerName: "Category",
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.category} />;
       },
-    
+
     },
     {
       field: "trafficType",
-      width:300,
+      width: 300,
       headerName: "TrafficType",
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.metadata.trafficType} />;
@@ -136,11 +139,11 @@ export const SlaProfiles = () => {
     {
       field: "priority",
       headerName: "Priority",
-      width:100,
+      width: 100,
       cellRenderer: (params: any) => {
         return <TextRowCell value={params.data.trafficSLO.priority} />;
       },
-      
+
     },
 
     {
@@ -180,9 +183,10 @@ export const SlaProfiles = () => {
     },
   ];
 
-  if ( ( data) || (grpcData)) {
+  if ((data) || (grpcData)) {
     return (
-      <Wrapper title="Connection SLO Profiles">
+      <DefaultLayout>
+        <Breadcrumb pageName="SLA Profiles" />
         <DataGrid
           rowData={serverStatus === "live" ? data : data}
           columnDefs={serverStatus === "live" ? stubServerColumnsDef : stubServerColumnsDef}
@@ -191,7 +195,7 @@ export const SlaProfiles = () => {
             width: "1600px",
           }}
         />
-      </Wrapper>
+      </DefaultLayout>
     );
   }
 

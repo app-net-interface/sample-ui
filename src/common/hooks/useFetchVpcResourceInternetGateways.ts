@@ -51,6 +51,16 @@ export const useFetchVpcResourceInternetGateways = (provider: string, region: st
             const accountId = InternetGateway.getAccountId();
             const region = InternetGateway.getRegion();
             const state = InternetGateway.getState();
+            const labels: any = {};
+            const labelsMap = InternetGateway.getLabelsMap();
+            const attatchedVpcId = InternetGateway.getAttachedVpcId();
+            const project = InternetGateway.getProject();
+            const selfLink = InternetGateway.getSelfLink();
+
+            labelsMap.getEntryList().forEach(([key, value]: [string, any]) => {
+              labels[key] = value;
+            });
+
             return {
               name,
               id,
@@ -58,7 +68,11 @@ export const useFetchVpcResourceInternetGateways = (provider: string, region: st
               accountId,
               region,
               vpcId,
-              state,             
+              state,
+              labels,
+              attatchedVpcId,
+              project,
+              selfLink,
             };
           });
 

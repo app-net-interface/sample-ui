@@ -23,10 +23,14 @@ import { useEffect } from "react";
 
 import { DataGrid, TextRowCell } from "@/components/data-grid";
 import { Wrapper } from "@/components/views/wrapper";
+import DefaultLayout from '../../../layout/DefaultLayout';
+
 
 import { serverStatus } from "@/common/constants";
 import { AppDispatch, RootState } from "@/store/store";
 import { fetchMonitoringPolicies } from "@/store/monitoring-policies-slice/thunk/monitoringPoliciesThunk";
+
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 export const MonitoringPolicy = () => {
   const { data } = useSelector((state: RootState) => state.monitoringPolicies);
@@ -225,16 +229,18 @@ export const MonitoringPolicy = () => {
 
   if ((data) || (grpcData)) {
     return (
-      <Wrapper title="Connection Monitoring Policies">
-        <DataGrid
-          rowData={serverStatus === "live" ? data : data}
-          columnDefs={serverStatus === "live" ? stubServerColumnsDef : stubServerColumnsDef}
-          heightAndWidth={{
-            height: "1200px",
-            width: "1600px",
-          }}
-        />
-      </Wrapper>
+      <DefaultLayout>
+        <Breadcrumb pageName="Connection Monitoring Policies" />
+        <div className="p-3">
+          <DataGrid
+            rowData={serverStatus === "live" ? data : data}
+            columnDefs={serverStatus === "live" ? stubServerColumnsDef : stubServerColumnsDef}
+            heightAndWidth={{
+              height: "1200px",
+            }}
+          />
+        </div>
+      </DefaultLayout>
     );
   }
 

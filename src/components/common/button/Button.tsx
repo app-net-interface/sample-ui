@@ -51,18 +51,26 @@ interface TertiaryButtonProps {
 
 type ButtonProps = PrimaryButtonProps | SecondaryButtonProps | TertiaryButtonProps;
 
-export const Button: FC<ButtonProps> = ({ customClass, onClick, text, iconSrc, variant }) => {
+export const Button: FC<ButtonProps> = ({ onClick, text, iconSrc }) => {
   return (
     <AntDButton
-      className={cx(styles.btn, customClass, {
-        [styles.btn__primary]: variant === ButtonVariants.PRIMARY,
-        [styles.btn__secondary]: variant === ButtonVariants.SECONDARY,
-        [styles.btn__tertiary]: variant === ButtonVariants.TERTIARY,
-      })}
       onClick={onClick}
+      style={{
+        backgroundColor: '#1890ff', // Blue background
+        color: 'white', // White text
+        padding: '10px 20px', // Padding around text
+        borderRadius: '5px', // Rounded corners
+        border: 'none', // No border
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', // Subtle shadow
+        transition: 'all 0.3s', // Smooth transition for hover effect
+        marginTop: '20px', // Add space between buttons
+        marginBottom: '20px', // Add space between buttons
+      }}
+      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} // Slightly enlarge on hover
+      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} // Return to original size
     >
       <span>{text}</span>
-      {iconSrc && <img src={iconSrc} alt={text} />}
+      {iconSrc && <img src={iconSrc} alt={text} style={{ marginLeft: '10px' }} />}
     </AntDButton>
   );
 };

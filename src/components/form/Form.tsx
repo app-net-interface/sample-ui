@@ -46,7 +46,7 @@ interface FormProps extends AntDProps {
 
 export const Form: FC<FormProps> = ({ fields = [], fieldsArray = [], formDataDescription }) => {
   const formFields = fields.map((field, index) => (
-    <FormItem {...field} key={index}>
+    <FormItem  {...field} key={index}>
       {field.component}
     </FormItem>
   ));

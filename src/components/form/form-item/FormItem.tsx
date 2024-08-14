@@ -29,7 +29,12 @@ interface FormItemProps extends AntDFormItemProps {
 
 export const FormItem: FC<FormItemProps> = ({ children, label, name, rules, order }) => {
   return (
-    <AntDForm.Item label={label} name={name} rules={rules} className={styles.formItem} style={{ order: order }}>
+    <AntDForm.Item
+      label={label}
+      name={name}
+      rules={rules}
+      className="w-full rounded-xl"
+      style={{ order: order }}>
       {children}
     </AntDForm.Item>
   );

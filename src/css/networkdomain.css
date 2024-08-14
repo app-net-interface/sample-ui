@@ -1,0 +1,25 @@
+.slider {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+}
+
+.box {
+    flex: 0 0 auto;
+    width: 75px;
+    height: 100px;
+    scroll-snap-align: start;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+
+.box img {
+    width: 50px;
+    height: 50px;
+}

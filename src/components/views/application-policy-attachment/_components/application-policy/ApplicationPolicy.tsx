@@ -39,9 +39,9 @@ export const ApplicationPolicy: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const options = policies.map(policy => ({
-      value: policy.id,
-      label: `${policy.appConnection?.metadata?.name} (${policy.id})`
-    })
+    value: policy.id,
+    label: `${policy.appConnection?.metadata?.name} (${policy.id})`
+  })
   )
 
   const handleChange = (value: string) => {
@@ -51,14 +51,17 @@ export const ApplicationPolicy: FC = () => {
   return (
     <Wrapper title={"Select Application Connection Policy"} expand>
       <p>An application connection provides connectivity for application components distributed across networking domains like VPCs, VRFs, or VLANs. It ensures seamless communication, adhering to specific access policy and security measures..</p>
-      <div style={{display:"flex", justifyContent:"space-between"}}>
-      <Select
-        options={options}
-        onChange={handleChange}
-        defaultValue={policy}
-        allowClear
-      />
-      <Checkbox defaultChecked>Allow dynamic resourouce selection</Checkbox>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <Select
+          options={options}
+          onChange={handleChange}
+          defaultValue={policy}
+          allowClear
+        />
+        <div className="space-x-2">
+          <Checkbox defaultChecked></Checkbox>
+          <label>Allow dynmaic resource selection</label>
+        </div>
       </div>
     </Wrapper>
   );

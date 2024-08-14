@@ -52,9 +52,12 @@ export const useFetchVpcResourceNATGateways = (provider: string, region: string,
             const state = NATGateway.getState();
             const publicIp = NATGateway.getPublicIp();
             const privateIp = NATGateway.getPrivateIp();
-            const subnetId =  NATGateway.getSubnetId();
+            const subnetId = NATGateway.getSubnetId();
             const labels: any = {};
             const labelsMap = NATGateway.getLabelsMap();
+            const selfLink = NATGateway.getSelfLink();
+            const project = NATGateway.getProject();
+            // const additional_properties = NATGateway.getAdditionalPropertiesMap();
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
@@ -71,6 +74,9 @@ export const useFetchVpcResourceNATGateways = (provider: string, region: string,
               privateIp,
               subnetId,
               labels,
+              selfLink,
+              project,
+              // additional_properties,
             };
           });
 

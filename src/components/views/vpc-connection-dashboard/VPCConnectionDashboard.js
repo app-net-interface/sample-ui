@@ -23,6 +23,7 @@ import Select from 'react-select';
 import { getGeoLocationForIP } from './GeoUtil';
 import { convertGeoLocationToGeoData, initMap, setMarker, hideMap } from './MapUtil';
 import './styles.css';
+import DefaultLayout from '@/layout/DefaultLayout';
 
 export const VPCConnectionDashboard = () => {
   const svgRef = useRef();
@@ -109,7 +110,7 @@ export const VPCConnectionDashboard = () => {
       .attr('font-size', '12px')
       .attr('text-anchor', 'middle')
       .text(d => d.id)
-   
+
     const simulation = d3.forceSimulation(data.nodes)
       .force('link', d3.forceLink(data.edges).id(d => d.id).distance(5))
       .force('charge', d3.forceManyBody().strength(-10))
@@ -167,7 +168,7 @@ export const VPCConnectionDashboard = () => {
               });
             });
             // Plot the selected IP on the map in the end, color it blue and center it here.
-            if (geoLocation && geoLocation.latitude && geoLocation.longitude ) {
+            if (geoLocation && geoLocation.latitude && geoLocation.longitude) {
               setMarker(convertGeoLocationToGeoData(geoLocation), true);
             }
           });
@@ -254,24 +255,26 @@ export const VPCConnectionDashboard = () => {
   const options = [{ value: '', label: 'All' }, ...sortedOptions.map(ip => ({ value: ip, label: ip }))];
 
   return (
-    <div>
-      <Select
-        options={options}
-        onChange={e => setSelectedIP(e ? e.value : null)}
-        placeholder="Select IP..."
-        isClearable
-        isSearchable
-      />
-      <svg ref={svgRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
-        <g id="canvas"></g>
-      </svg>
-      <div id="map" style={{ width: '100%', height: '1000px' }}></div>
-      <div id="node-info"></div>
-      <div id="edge-info"></div>
-      <div id="tooltip" ref={tooltipRef} style={{ display: tooltipContent ? 'block' : 'none', color: 'blue', fontSize: '20px', position: 'absolute', left: tooltipX, top: tooltipY, backgroundColor: 'white', border: '1px solid black', padding: '5px' }}>
-        {tooltipContent}
+    <DefaultLayout>
+      <div>
+        <Select
+          options={options}
+          onChange={e => setSelectedIP(e ? e.value : null)}
+          placeholder="Select IP..."
+          isClearable
+          isSearchable
+        />
+        <svg ref={svgRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
+          <g id="canvas"></g>
+        </svg>
+        <div id="map" style={{ width: '100%', height: '1000px' }}></div>
+        <div id="node-info"></div>
+        <div id="edge-info"></div>
+        <div id="tooltip" ref={tooltipRef} style={{ display: tooltipContent ? 'block' : 'none', color: 'blue', fontSize: '20px', position: 'absolute', left: tooltipX, top: tooltipY, backgroundColor: 'white', border: '1px solid black', padding: '5px' }}>
+          {tooltipContent}
+        </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 };
 

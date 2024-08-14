@@ -41,7 +41,8 @@ interface State {
 export function toApplicationConnection(state: State): ApplicationConnection[] {
   const { data: policies } = useSelector((state: RootState) => state.applicationConnectionPolicies);
   const policy = policies.find(p => p.id === state.policy)?.appConnection
-  const appConnections = []
+  // const appConnections = []
+  const appConnections: ApplicationConnection[] = [];
   for (let i = 0; i < state.networkDomainConnectionNames.length; i++) {
     if (policy) {
       const cleanPolicy = structuredClone(policy) as ApplicationConnection
@@ -86,9 +87,9 @@ const initialState: State = {
         },
         matchLabels: {},
       },
-      },
     },
-  
+  },
+
   networkDomainConnectionNames: [],
   policy: undefined,
   //security: {},
@@ -104,15 +105,15 @@ export const applicationConnectionDeployerSlice = createSlice({
       state.networkDomainConnectionNames = action.payload;
     },
     setNetworkPolicy: (state: State, action: PayloadAction<string>) => {
-      console.log("Setting network policy name ",action.payload)
+      console.log("Setting network policy name ", action.payload)
       state.networkPolicyData.networkPolicy.selector.matchName = action.payload;
     },
     setPolicy: (state: State, action: PayloadAction<string | undefined>) => {
       state.policy = action.payload
     },
     setAccessControlPolicy: (state: State, action: PayloadAction<string | undefined>) => {
-      
-      console.log("Setting access control policy name ",action.payload)
+
+      console.log("Setting access control policy name ", action.payload)
       if (action.payload !== undefined) {
         state.accessPolicyData.accessPolicy.selector.matchName.name = action.payload;
       }

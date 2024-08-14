@@ -51,7 +51,15 @@ export const useFetchVpcResourceACLs = (provider: string, region: string, id: st
             const region = acl.getRegion();
             const accountId = acl.getAccountId();
             const labels: any = {};
+            const rules: any = {};
             const labelsMap = acl.getLabelsMap();
+            const rulesMap = acl.getRulesList();
+            const project = acl.getProject();
+            const selfLink = acl.getSelfLink();
+
+            rulesMap.forEach((value: string, key: string) => {
+              rules[key] = value;
+            });
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
@@ -63,8 +71,11 @@ export const useFetchVpcResourceACLs = (provider: string, region: string, id: st
               provider,
               accountId,
               region,
+              project,
+              rules,
               vpcId,
               labels,
+              selfLink,
             };
           });
 

@@ -52,10 +52,21 @@ export const useFetchVpcResourceRouteTables = (provider: string, region: string,
             const region = routeTable.getRegion();
             const labels: any = {};
             const labelsMap = routeTable.getLabelsMap();
+            const project = routeTable.getProject();
+            const selfLink = routeTable.getSelfLink();
+
+            const routes: any = {};
+            const routesMap = routeTable.getRoutesList();
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
             });
+
+            routesMap.forEach((value: string, key: string) => {
+              routes[key] = value;
+            });
+
+            console.log("ROUTES: " + routes);
 
             return {
               name,
@@ -65,6 +76,9 @@ export const useFetchVpcResourceRouteTables = (provider: string, region: string,
               region,
               vpcId,
               labels,
+              routes,
+              project,
+              selfLink
             };
           });
 

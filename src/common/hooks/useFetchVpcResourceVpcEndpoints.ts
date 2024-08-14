@@ -55,6 +55,10 @@ export const useFetchVpcResourceVpcEndpoints = (provider: string, region: string
             const subnetIds = vpcEndpoint.getSubnetIds();
             const labels: any = {};
             const labelsMap = vpcEndpoint.getLabelsMap();
+            const state = vpcEndpoint.getState();
+            const type = vpcEndpoint.getType();
+            const project = vpcEndpoint.getProject();
+            const selfLink = vpcEndpoint.getSelfLink();
 
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
@@ -71,6 +75,10 @@ export const useFetchVpcResourceVpcEndpoints = (provider: string, region: string
               subnetIds,
               service,
               labels,
+              state,
+              type,
+              project,
+              selfLink
             };
           });
 
