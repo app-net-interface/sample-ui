@@ -16,33 +16,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+import { createTheme } from '@mui/material/styles';
 
-export enum InfraResourceType {
-  VMS = "VM",
-  SUBNETS = "Subnet",
-  ROUTE_TABLES = "Route Table",
-  ACLS = "Network ACL",
-  SECURITY_GROUPS = "Security Group",
-  NAT_GATEWAYS = "NAT Gateway",
-  CLOUD_ROUTERS = "Cloud Router",
-  INTERNET_GATEWAYS = "Internet Gateway",
-  VPC_ENDPOINTS = "VPC Endpoint",
-  PUBLIC_IPS = "Public IP",
-  CLUSTERS = "Cluster",
-  ACTIVE_CONNECTIONS = "Active Connections"
-}
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Avenir", "Arial", sans-serif',
+    h4: {
+      fontFamily: '"Avenir", "Arial", sans-serif',
+      fontWeight: 600,
+    },
+    h5: {
+      fontFamily: '"Avenir", "Arial", sans-serif',
+      fontWeight: 400,
+    },
+    body1: {
+      fontFamily: '"Avenir", "Arial", sans-serif',
+    },
+    body2: {
+      fontFamily: '"Avenir", "Arial", sans-serif',
+    },
+    // Add more variants as needed
+  },
+});
 
-export enum InfraClusterSubResources {
-  PODS = "pods",
-  SERVICES = "services",
-  NAMESPACES = "namespaces",
-  NODES = "nodes"
-}
-
-export enum InfraResourceProvider {
-  GCP = "GCP",
-  AWS = "AWS",
-  AZURE = "Azure",
-  ENTERPRISE = "Enterprise",
-  ALL_PROVIDERS = "ALL_PROVIDERS",
-}
+export default theme;

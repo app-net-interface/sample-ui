@@ -126,10 +126,10 @@ export const ProviderAndAccountId = () => {
           }, 1000);
           break;
 
-        case InfraResourceProvider.CISCO_ISE:
+        case InfraResourceProvider.ENTERPRISE:
           dispatch(setInfraVpcs([]));
           setValue("provider", value);
-          setLastClickedProvider(InfraResourceProvider.CISCO_ISE);
+          setLastClickedProvider(InfraResourceProvider.ENTERPRISE);
           break;
 
         case InfraResourceProvider.ALL_PROVIDERS:
@@ -169,8 +169,8 @@ export const ProviderAndAccountId = () => {
         </Button>
         <Button
           disabled={true}
-          sx={muiButtonColorHandler(lastClickedProvider, InfraResourceProvider.CISCO_ISE)}
-          onClick={() => handleProviderSelect(InfraResourceProvider.CISCO_ISE)}
+          sx={muiButtonColorHandler(lastClickedProvider, InfraResourceProvider.ENTERPRISE)}
+          onClick={() => handleProviderSelect(InfraResourceProvider.ENTERPRISE)}
         >
           Cisco ISE
         </Button>

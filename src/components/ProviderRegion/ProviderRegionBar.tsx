@@ -13,6 +13,15 @@ interface ProviderButtonsProps {
     home?: boolean;
 }
 
+// Adjust provider mapping with exact string values
+const providerButtons = [
+  { name: 'AWS', value: InfraResourceProvider.AWS },
+  { name: 'GCP', value: InfraResourceProvider.GCP },
+  { name: 'Azure', value: InfraResourceProvider.AZURE },  // Use "Azure" exactly as in summarySlice
+  { name: 'Enterprise', value: InfraResourceProvider.ENTERPRISE }, // Updated from Cisco to Enterprise
+  { name: 'All Providers', value: InfraResourceProvider.ALL_PROVIDERS },
+];
+
 const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonClick, home = false }) => {
 
     const dispatch = useDispatch<AppDispatch>();
@@ -95,7 +104,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
 
         setSelectedVpcLocal(value)
         dispatch(setSelectedVpc(value));
-        // handleProviderSelect(selectedButton)
+        //handleProviderSelect(selectedButton)
     };
 
     const handleProviderSelect = (value: any) => {
@@ -128,16 +137,16 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                     fetchRegions();
                     break;
 
-                case InfraResourceProvider.CISCO_ISE:
+                case InfraResourceProvider.ENTERPRISE:
                     dispatch(setInfraVpcs([]));
-                    dispatch(setSelectedProvider(InfraResourceProvider.CISCO_ISE));
-                    setLastClickedProvider(InfraResourceProvider.CISCO_ISE);
+                    dispatch(setSelectedProvider(InfraResourceProvider.ENTERPRISE));
+                    setLastClickedProvider(InfraResourceProvider.ENTERPRISE);
                     break;
 
                 case InfraResourceProvider.ALL_PROVIDERS:
-                    dispatch(setInfraVpcs([]));
-                    dispatch(setSelectedProvider(InfraResourceProvider.ALL_PROVIDERS));
-                    setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
+                    //dispatch(setInfraVpcs([]));
+                    //dispatch(setSelectedProvider(InfraResourceProvider.ALL_PROVIDERS));
+                    //setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
                     break;
                 default:
                     console.log(`Unhandled exception, value is ${value}`);
@@ -155,13 +164,17 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                         { name: 'AWS', enum: InfraResourceProvider.AWS },
                         { name: 'GCP', enum: InfraResourceProvider.GCP },
                         { name: 'Azure', enum: InfraResourceProvider.AZURE },
-                        { name: 'Cisco', enum: InfraResourceProvider.CISCO_ISE },
+                        { name: 'Cisco', enum: InfraResourceProvider.ENTERPRISE },
                         { name: 'All Providers', enum: InfraResourceProvider.ALL_PROVIDERS },
                     ].map((button) => (
                         <button
                             className={`dark:border-white dark:text-white button-blue text-lg px-3 py-2 ${selectedButton === button.enum ? 'selected' : ''}`}
                             key={button.name}
-                            onClick={() => { handleProviderSelect(button.enum); onProviderButtonClick() }}
+                            onClick={() => { 
+                            if (button.enum !== InfraResourceProvider.ALL_PROVIDERS) {
+                                handleProviderSelect(button.enum);
+                            }
+                            }}
                         >
                             {button.name}
                         </button>

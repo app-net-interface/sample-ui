@@ -17,6 +17,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/*********** DEPRICATED - Refer home.tsx */
+
 import React, { useEffect, useState } from 'react';
 import { Button, ButtonGroup, Card, CardContent, Typography } from '@mui/material';
 import { Pie } from 'react-chartjs-2';
@@ -28,7 +30,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
 
 const resourceCategories:
   {
@@ -42,18 +43,23 @@ const resourceCategories:
 
 export const Dashboard: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<Source>('All Providers');
-  // OLD UI: blank strings for temporary error handling
-  const { fetchSummary } = useFetchSummary('', '')
+  
+  // Update the hook to pass the selected provider.
+  const { fetchSummary } = useFetchSummary(selectedProvider, '');
   const { count, status } = useSelector((state: RootState) => state.summary);
 
-  useEffect(() => fetchSummary(), [])
+  // Call fetchSummary every time the selected provider changes.
+  useEffect(() => {
+    fetchSummary();
+  }, [selectedProvider]);
 
   const handleSelect = (provider: Source) => {
-    fetchSummary()
+    console.log("Selected Provider = ", provider);
     setSelectedProvider(provider);
   };
 
-  const statusData = status[selectedProvider]
+  const statusData = status[selectedProvider];
+
   // VM : Pie chart data
   const vmPieChartData = {
     labels: ['Running', 'Stopped', 'Terminated'],
@@ -80,13 +86,12 @@ export const Dashboard: React.FC = () => {
             <Button onClick={() => handleSelect('AWS')}>AWS</Button>
             <Button onClick={() => handleSelect('GCP')}>GCP</Button>
             <Button onClick={() => handleSelect('Azure')}>Azure</Button>
-            <Button onClick={() => handleSelect('Enterprise')}>Enterprise</Button>
-            <Button onClick={() => handleSelect('All Providers')}>All Providers</Button>
+            {/* <Button onClick={() => handleSelect('Enterprise')}>Enterprise</Button> */}
+            {/*<Button onClick={() => handleSelect('All Providers')}>All Providers</Button> */}
           </ButtonGroup>
         </div>
         <div className="resource-section">
           <div className="resource-category-section">
-            {/* ---- */}
             {resourceCategories.map(({ id, name, resources }) => (
               <Card key={id} className="resource-category-card">
                 <div className="resource-category">
@@ -108,7 +113,6 @@ export const Dashboard: React.FC = () => {
                 </div>
               </Card>
             ))}
-            {/* ---- */}
           </div>
         </div>
       </div>

@@ -27,7 +27,8 @@ import {
   setStatus
 } from "@/store/summary-slice/summarySlice";
 import { AppDispatch } from "@/store/store";
-import { BACKEND_API_PREFIX } from "@/common/constants";
+import { BACKEND_API_PREFIX, providers } from "@/common/constants";
+import { InfraResourceProvider } from "../enum";
 
 const { SummaryRequest } = require("@/_proto/infra-sdk/output/cloud_pb");
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
@@ -95,13 +96,13 @@ export const useFetchSummary = (accountId, vpcId) => {
     })
   }
 
-  // fetchSummary fetches all provider information at once
-  // commented out for now since we only have AWS on local machine
   const fetchSummary = () => {
-    fetchProvider('AWS')
-    fetchProvider('GCP')
-    fetchProvider('Azure')
-    fetchProvider('Enterprise')
+    fetchProvider(InfraResourceProvider.AWS)
+    fetchProvider(InfraResourceProvider.GCP)
+    fetchProvider(InfraResourceProvider.AZURE)
+    fetchProvider(InfraResourceProvider.ENTERPRISE)
+    //fetchProvider(InfraResourceProvider.ALL_PROVIDERS)
+    
   };
 
   return { fetchSummary };
