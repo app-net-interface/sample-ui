@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
@@ -17,6 +17,7 @@ import ACLModal from '../../components/Modal/ACLModal';
 import VMModal from '../../components/Modal/VMModal';
 
 import {
+    useFetchVpcsResources,
     useFetchVpcResourceSubnets,
     useFetchVpcResourceVms,
     useFetchVpcResourceSecurityGroups,
@@ -30,6 +31,8 @@ import {
 } from "@/common/hooks";
 import '../../css/vpc.css';
 import { setSelectedAccountId } from "@/store/selectedRegionAccountId-slice/selectedRegionAccountIdSlice";
+import { sortedData, determineSortConfig, SortConfig } from "@/common/utils/sortingUtil";
+import { handleButtonClick, handleOpenModal } from "@/pages/MultiCloudInfra/Handlers";
 
 const MultiCloudInfra = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,12 +44,12 @@ const MultiCloudInfra = () => {
 
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [timeSinceUpdate, setTimeSinceUpdate] = useState<string>('just now');
-    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'ascending' | 'descending' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
     // api
     const { vpcs } = useSelector((state: RootState) => state.infraResources); // retrieve vpcs from api
     const { selectedProvider, selectedAccountId } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
-
+    //const { vpcResources } =   useFetchVpcsResources(selectedProvider, selectedAccountId, region);
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSubnets, fetchVpcResourcesSubnets } = useFetchVpcResourceSubnets(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSecurityGroups, fetchVpcResourceSecurityGroups } = useFetchVpcResourceSecurityGroups(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -126,30 +129,13 @@ const MultiCloudInfra = () => {
     }, [selectedAccountId]);
 
     // sorting funciton
-    const sortedData = (data) => {
-        if (!sortConfig) return data;
-
-        return [...data].sort((a, b) => {
-            if (a[sortConfig.key] < b[sortConfig.key]) {
-                return sortConfig.direction === 'ascending' ? -1 : 1;
-            }
-            if (a[sortConfig.key] > b[sortConfig.key]) {
-                return sortConfig.direction === 'ascending' ? 1 : -1;
-            }
-            return 0;
-        });
-    };
-
-    const handleSort = (key: string) => {
-        let direction: 'ascending' | 'descending' = 'ascending';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
-        }
-        setSortConfig({ key, direction });
+    const handleSortClick = (key: string) => {
+        const newConfig = determineSortConfig(sortConfig, key);
+        setSortConfig(newConfig);
     };
 
     const buttonData = [
-        // { name: 'VPC', fetchFunction: null },
+       // { name: 'VPC', fetchFunction: fetchVpcsResources },
         { name: 'VM', fetchFunction: fetchVpcResourcesVms },
         { name: 'Subnet', fetchFunction: fetchVpcResourcesSubnets },
         { name: 'Security Group', fetchFunction: fetchVpcResourceSecurityGroups },
@@ -161,23 +147,6 @@ const MultiCloudInfra = () => {
         { name: 'Internet Gateway', fetchFunction: fetchVpcResourceInternetGateways },
         { name: 'Public IP', fetchFunction: fetchVpcResourcePublicIPs },
     ];
-
-    const handleButtonClick = async (name, fetchFunction) => {
-        setIsModalOpen(false);
-        setSelectedAccountId(selectedAccountId);
-        setSelectedView(name);
-        setLastUpdated(new Date());
-        if (fetchFunction) {
-            await fetchFunction();
-        }
-    };
-
-    const handleOpenModal = (vpc) => {
-        setSelectedVpc(vpc);
-        if (!isModalOpen) {
-            setIsModalOpen(true);
-        }
-    }
 
     const handleVPCView = () => {
         setSelectedView('VPC');
@@ -206,7 +175,20 @@ const MultiCloudInfra = () => {
                         <button
                             className={`dark:border-white dark:text-white button-blue text-sm py-1 whitespace-nowrap ${selectedView === button.name ? 'selected' : ''}`}
                             key={button.name}
-                            onClick={() => handleButtonClick(button.name, button.fetchFunction)}
+                            onClick={() =>
+                                handleButtonClick(
+                                    button.name,
+                                    async () => {
+                                        button.fetchFunction();
+                                        return Promise.resolve();
+                                    },
+                                    selectedAccountId,
+                                    setSelectedView,
+                                    setLastUpdated,
+                                    setIsModalOpen,
+                                    setSelectedAccountId
+                                )
+                            }
                         >
                             {button.name}
                         </button>
@@ -221,14 +203,14 @@ const MultiCloudInfra = () => {
                     // Render table for Security Group
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
 
                         </div>
                         <div>
-                            {sortedData(sgSearch).map((group, idx) => (
+                            {sortedData(sgSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -236,7 +218,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
@@ -255,15 +237,15 @@ const MultiCloudInfra = () => {
                 ) : selectedView === 'VM' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-2 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-2 py-2 text-center">Provider</span>
 
                         </div>
                         <div>
-                            {sortedData(vmSearch).map((group, idx) => (
+                            {sortedData(vmSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -271,7 +253,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
@@ -291,14 +273,14 @@ const MultiCloudInfra = () => {
                 ) : selectedView === 'Subnet' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-2 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-1 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-2 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-1 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
                         </div>
                         <div>
-                            {sortedData(subnetSearch).map((group, idx) => (
+                            {sortedData(subnetSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -306,7 +288,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
@@ -326,14 +308,14 @@ const MultiCloudInfra = () => {
                 ) : selectedView === "ACL" ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
 
                         </div>
                         <div>
-                            {sortedData(aclSearch).map((group, idx) => (
+                            {sortedData(aclSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -341,7 +323,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
@@ -361,14 +343,14 @@ const MultiCloudInfra = () => {
                 ) : selectedView === "Route Table" ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
                         </div>
                         <div>
-                            {sortedData(routeTableSearch).map((group, idx) => (
+                            {sortedData(routeTableSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -377,7 +359,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
@@ -397,14 +379,14 @@ const MultiCloudInfra = () => {
                 ) : selectedView === "VPC Endpoint" ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
                         </div>
                         <div>
-                            {sortedData(vpcEndpointSearch).map((group, idx) => (
+                            {sortedData(vpcEndpointSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -412,7 +394,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
@@ -432,13 +414,13 @@ const MultiCloudInfra = () => {
                 ) : selectedView === 'NAT Gateway' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
                         </div>
                         <div>
-                            {sortedData(natGatewaysSearch).map((group, idx) => (
+                            {sortedData(natGatewaysSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -446,7 +428,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
@@ -466,14 +448,14 @@ const MultiCloudInfra = () => {
                 ) : selectedView === 'Internet Gateway' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
                         </div>
                         <div>
-                            {sortedData(igsSearch).map((group, idx) => (
+                            {sortedData(igsSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -481,7 +463,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }
                                     }
                                 >
@@ -508,7 +490,7 @@ const MultiCloudInfra = () => {
                             <span className="w-1/4 px-1 py-2 text-center">Provider</span>
                         </div>
                         <div>
-                            {publicIPsSearch.map((group, idx) => (
+                            {sortedData(publicIPsSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-gray-600' : 'bg-white dark:bg-gray-700'}`}
@@ -516,7 +498,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
@@ -535,13 +517,13 @@ const MultiCloudInfra = () => {
                 ) : selectedView === 'Routers' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
                         </div>
                         <div>
-                            {sortedData(routerSearch).map((group, idx) => (
+                            {sortedData(routerSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-gray-600' : 'bg-white dark:bg-gray-700'}`}
@@ -549,7 +531,7 @@ const MultiCloudInfra = () => {
                                         setSelectedRow(group.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(group);
+                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
@@ -568,13 +550,13 @@ const MultiCloudInfra = () => {
                     // Render default vpcSearch table
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSort('name')} className="w-1/4 px-1 py-2 text-center">Name</span>
-                            <span onClick={() => handleSort('id')} className="w-1/4 px-4 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSort('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSort('region')} className="w-1/4 px-1 py-2 text-center">Region</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-1 py-2 text-center">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('region')} className="w-1/4 px-1 py-2 text-center">Region</span>
                         </div>
                         <div>
-                            {sortedData(vpcSearch).map((vpc, idx) => (
+                            {sortedData(vpcSearch, sortConfig).map((vpc, idx) => (
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === vpc.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
@@ -583,7 +565,7 @@ const MultiCloudInfra = () => {
                                         setSelectedVpcId(vpc.id);
                                     }}
                                     onDoubleClick={() => {
-                                        handleOpenModal(vpc);
+                                        handleOpenModal(vpc, setSelectedVpc, setIsModalOpen);
                                     }}>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.name}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.id}</span>
