@@ -17,7 +17,7 @@ import ACLModal from '../../components/Modal/ACLModal';
 import VMModal from '../../components/Modal/VMModal';
 
 import {
-    useFetchVpcsResources,
+   // useFetchVpcsResources,
     useFetchVpcResourceSubnets,
     useFetchVpcResourceVms,
     useFetchVpcResourceSecurityGroups,
@@ -49,6 +49,7 @@ const MultiCloudInfra = () => {
     const { vpcs } = useSelector((state: RootState) => state.infraResources); // retrieve vpcs from api
     const { selectedProvider, selectedAccountId } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
+
     //const { vpcResources } =   useFetchVpcsResources(selectedProvider, selectedAccountId, region);
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSubnets, fetchVpcResourcesSubnets } = useFetchVpcResourceSubnets(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -73,6 +74,12 @@ const MultiCloudInfra = () => {
         selfLink: vpc.selfLink,
         project: vpc.project,
     }));
+
+     // Create a dummy fetch function for VPC button.
+     const fetchVpcs = async () => {
+        console.log("Dummy VPC fetch function called. vpcs:", vpcs);
+        return Promise.resolve(vpcs);
+    };
 
     // search function
     const search = (data: any[], searchTerm: string, keys: string[]) => {
@@ -135,7 +142,7 @@ const MultiCloudInfra = () => {
     };
 
     const buttonData = [
-       // { name: 'VPC', fetchFunction: fetchVpcsResources },
+        { name: 'VPC', fetchFunction: fetchVpcs },
         { name: 'VM', fetchFunction: fetchVpcResourcesVms },
         { name: 'Subnet', fetchFunction: fetchVpcResourcesSubnets },
         { name: 'Security Group', fetchFunction: fetchVpcResourceSecurityGroups },
@@ -153,6 +160,42 @@ const MultiCloudInfra = () => {
         setIsModalOpen(false);
         setSelectedVpcId('');
     }
+
+    useEffect(() => {
+        if (selectedView === 'VM') {
+            // Trigger the VM fetch using the new provider value.
+            fetchVpcResourcesVms();
+        } else if (selectedView === 'Subnet') {
+            fetchVpcResourcesSubnets();
+        } else if (selectedView === 'Security Group') {
+            fetchVpcResourceSecurityGroups();
+        }
+        else if (selectedView === 'ACL') {
+            fetchVpcResourceACLs();
+        }
+        else if (selectedView === 'Routers') {
+            fetchVpcResourceRouters();
+        }
+        else if (selectedView === 'Route Table') {
+            fetchVpcResourceRouteTables();
+        }
+        else if (selectedView === 'VPC Endpoint') {
+            fetchVpcResourceVPCEndpoints();
+        }
+        else if (selectedView === 'NAT Gateway') {
+            fetchVpcResourceNATGateways();
+        }
+        else if (selectedView === 'Internet Gateway') {
+            fetchVpcResourceInternetGateways();
+        }
+        else if (selectedView === 'Public IP') {
+            fetchVpcResourcePublicIPs();
+        }
+        else if (selectedView === 'VPC') {
+            fetchVpcs();
+        }
+
+    }, [selectedProvider, selectedAccountId, selectedView]);
 
     return (
         <DefaultLayout>
