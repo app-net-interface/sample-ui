@@ -26,24 +26,24 @@ const { ListPublicIPsRequest } = require("@/_proto/infra-sdk/output/cloud_pb");
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourcePublicIPsRequest = new ListPublicIPsRequest();
 
 export const useFetchVpcResourcePublicIPs = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourcePublicIPs, setVpcResourcePublicIPs] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourcePublicIPsRequest.setProvider(provider);
-  //vpcResourcePublicIPsRequest.setVpcId(id);
-  vpcResourcePublicIPsRequest.setRegion(region);
-  vpcResourcePublicIPsRequest.setAccountId(accountId);
-
-  const fetchVpcResourcePublicIPs = () => {
-    try {
-      infraSdkResourcesClient.listPublicIPs(vpcResourcePublicIPsRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListPublicIPsRequest();
+      request.setProvider(prov);
+      // Note: vpcId is not set in this case.
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listPublicIPs(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getPublicIpsList();
         if (data) {
-          const infraPublicIPs = data.map((PublicIP: any) => {
+          const result = data.map((PublicIP: any) => {
             const id = PublicIP.getId();
             const publicIP = PublicIP.getPublicIp()
             const privateIP = PublicIP.getPrivateIp()
@@ -81,11 +81,26 @@ export const useFetchVpcResourcePublicIPs = (provider: string, region: string, i
               selfLink,
             };
           });
-
-          setVpcResourcePublicIPs([...infraPublicIPs]);
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
-    } catch (e) {
+    });
+  };
+
+  const fetchVpcResourcePublicIPs = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourcePublicIPs(results);
+    } catch(e) {
       console.log("error", e);
     }
   };

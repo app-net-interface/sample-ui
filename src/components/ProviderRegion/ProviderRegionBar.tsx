@@ -116,7 +116,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.AWS));
                     setLastClickedProvider(InfraResourceProvider.AWS);
-                    fetchAccounts()
+                    fetchAccounts();
                     fetchVpcs();
                     fetchRegions();
                     break;
@@ -124,7 +124,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.GCP));
                     setLastClickedProvider(InfraResourceProvider.GCP);
-                    fetchAccounts()
+                    fetchAccounts();
                     fetchVpcs();
                     fetchRegions();
                     break;
@@ -132,21 +132,22 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.AZURE));
                     setLastClickedProvider(InfraResourceProvider.AZURE);
-                    fetchAccounts()
+                    fetchAccounts();
                     fetchVpcs();
                     fetchRegions();
                     break;
-
                 case InfraResourceProvider.ENTERPRISE:
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.ENTERPRISE));
                     setLastClickedProvider(InfraResourceProvider.ENTERPRISE);
                     break;
-
                 case InfraResourceProvider.ALL_PROVIDERS:
-                    //dispatch(setInfraVpcs([]));
-                    //dispatch(setSelectedProvider(InfraResourceProvider.ALL_PROVIDERS));
-                    //setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
+                    dispatch(setInfraVpcs([]));
+                    dispatch(setSelectedProvider(InfraResourceProvider.ALL_PROVIDERS));
+                    setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
+                    fetchAccounts();
+                    fetchVpcs();
+                    fetchRegions();
                     break;
                 default:
                     console.log(`Unhandled exception, value is ${value}`);
@@ -170,11 +171,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                         <button
                             className={`dark:border-white dark:text-white button-blue text-lg px-3 py-2 ${selectedButton === button.enum ? 'selected' : ''}`}
                             key={button.name}
-                            onClick={() => { 
-                            if (button.enum !== InfraResourceProvider.ALL_PROVIDERS) {
-                                handleProviderSelect(button.enum);
-                            }
-                            }}
+                            onClick={() => handleProviderSelect(button.enum)}
                         >
                             {button.name}
                         </button>

@@ -26,24 +26,24 @@ const { ListVPCEndpointsRequest } = require("@/_proto/infra-sdk/output/cloud_pb"
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourceVpcEndpointsRequest = new ListVPCEndpointsRequest();
 
 export const useFetchVpcResourceVpcEndpoints = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourceVpcEndpoints, setVpcResourceVpcEndpoints] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourceVpcEndpointsRequest.setProvider(provider);
-  vpcResourceVpcEndpointsRequest.setVpcId(id);
-  vpcResourceVpcEndpointsRequest.setRegion(region);
-  vpcResourceVpcEndpointsRequest.setAccountId(accountId);
-
-  const fetchVpcResourceVPCEndpoints = () => {
-    try {
-      infraSdkResourcesClient.listVPCEndpoints(vpcResourceVpcEndpointsRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListVPCEndpointsRequest();
+      request.setProvider(prov);
+      request.setVpcId(id);
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listVPCEndpoints(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getVepsList();
         if (data) {
-          const infraVpcEndpoints = data.map((vpcEndpoint: any) => {
+          const result = data.map((vpcEndpoint: any) => {
             const name = vpcEndpoint.getName();
             const id = vpcEndpoint.getId();
             const provider = vpcEndpoint.getProvider();
@@ -81,10 +81,25 @@ export const useFetchVpcResourceVpcEndpoints = (provider: string, region: string
               selfLink
             };
           });
-
-          setVpcResourceVpcEndpoints([...infraVpcEndpoints]);
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
+    });
+  };
+
+  const fetchVpcResourceVPCEndpoints = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourceVpcEndpoints(results);
     } catch (e) {
       console.log("error", e);
     }

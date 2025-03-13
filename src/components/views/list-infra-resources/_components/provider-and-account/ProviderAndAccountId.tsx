@@ -136,6 +136,9 @@ export const ProviderAndAccountId = () => {
           dispatch(setInfraVpcs([]));
           setValue("provider", value);
           setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
+          setTimeout(() => {
+            fetchVpcs();
+          }, 2000);
           break;
 
         default:

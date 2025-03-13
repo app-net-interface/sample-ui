@@ -26,95 +26,100 @@ const { ListInstancesRequest } = require("@/_proto/infra-sdk/output/cloud_pb");
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcSubResourceVmsRequest = new ListInstancesRequest();
 
 export const useFetchVpcResourceVms = (provider: string, region: string, id: string, accountId: string) => {
-  const [vpcResourceVms, setVpcResourceVms] = useState<any[]>([]);
+	const [vpcResourceVms, setVpcResourceVms] = useState<any[]>([]);
+	const dispatch = useDispatch();
 
-  const dispatch = useDispatch();
+	// Helper function to fetch VMs for a given provider.
+	const fetchForProvider = (prov: string): Promise<any[]> => {
+		return new Promise((resolve, reject) => {
+			const request = new ListInstancesRequest();
+			request.setProvider(prov);
+			// When provider is "all", assume the parameters are empty
+			if (provider === "all") {
+				request.setVpcId("");
+				request.setRegion("");
+				request.setAccountId("");
+			} else {
+				request.setVpcId(id);
+				request.setRegion(region);
+				request.setAccountId(accountId);
+			}
+			infraSdkResourcesClient.listInstances(request, {}, (err: any, response: any) => {
+				if (err) return reject(err);
+				const data = response?.getInstancesList();
+				if (data) {
+					const infraVms = data.map((instance: any) => {
+						let project = "";
+						let owner = "";
+						let compliant = "No";
+						const labels: any = {};
+						const labelsMap = instance.getLabelsMap();
+						labelsMap.forEach((value: string, key: string) => {
+							labels[key] = value;
+						});
+						if (labels && (("project" in labels) || ("Project" in labels))) {
+							project = labels["project"];
+						}
+						if (labels && (("owner" in labels) || ("Owner" in labels))) {
+							owner = labels["owner"];
+						}
+						if (owner && project) {
+							compliant = "Yes";
+						}
+						return {
+							name: instance.getName(),
+							vpcId: instance.getVpcid(),
+							region: instance.getRegion(),
+							id: instance.getId(),
+							accountId: instance.getAccountId(),
+							provider: instance.getProvider().toUpperCase(),
+							owner,
+							project,
+							type: instance.getType(),
+							subnetId: instance.getSubnetid(),
+							publicIp: instance.getPublicip(),
+							privateIp: instance.getPrivateip(),
+							state: instance.getState(),
+							labels,
+							compliant,
+							selfLink: instance.getSelfLink(),
+							securityGroups: instance.getSecuritygroupidsList(),
+							interfaceIds: instance.getInterfaceidsList(),
+							zone: instance.getZone(),
+						};
+					});
+					resolve(infraVms);
+				} else {
+					resolve([]);
+				}
+			});
+		});
+	};
 
-  vpcSubResourceVmsRequest.setProvider(provider);
-  vpcSubResourceVmsRequest.setVpcId(id);
-  vpcSubResourceVmsRequest.setRegion(region);
-  vpcSubResourceVmsRequest.setAccountId(accountId);
+	// Modified fetchVpcResourcesVms to handle "all" providers.
+	const fetchVpcResourcesVms = async () => {
+		try {
+			let results: any[] = [];
+			if (provider === "ALL_PROVIDERS") {
+				const providers = ["aws", "gcp", "azure"];
+				const responses = await Promise.all(providers.map(prov => fetchForProvider(prov)));
+				responses.forEach(res => results = results.concat(res));
+			} else {
+				results = await fetchForProvider(provider);
+			}
+			setVpcResourceVms(results);
+		} catch (e) {
+			console.log("error", e);
+		}
+	};
 
-  const fetchVpcResourcesVms = () => {
-    try {
-      infraSdkResourcesClient.listInstances(vpcSubResourceVmsRequest, {}, (err: any, response: any) => {
-        const data = response?.getInstancesList();
-        if (data) {
-          const infraVms = data.map((instance: any) => {
-            const name = instance.getName();
-            const id = instance.getId();
-            const accountId = instance.getAccountId();
-            const provider = instance.getProvider().toUpperCase();
-            const region = instance.getRegion();
-            const type = instance.getType();
-            const subnetId = instance.getSubnetid();
-            const publicIp = instance.getPublicip();
-            const privateIp = instance.getPrivateip();
-            const state = instance.getState();
-            const labels: any = {};
-            const labelsMap = instance.getLabelsMap();
-            const vpcId = instance.getVpcid();
-            const zone = instance.getZone();
-            const securityGroups = instance.getSecuritygroupidsList();
-            const interfaceIds = instance.getInterfaceidsList();
-            let project = ""
-            let owner = ""
-            let compliant = "No"
+	useEffect(() => {
+		if (vpcResourceVms.length) {
+			dispatch(setResourceFetchedEntities(vpcResourceVms));
+		}
+	}, [vpcResourceVms]);
 
-            const selfLink = instance.getSelfLink();
-
-            labelsMap.forEach((value: string, key: string) => {
-              labels[key] = value;
-            });
-            if (labels && (("project" in labels) || ("Project" in labels))) {
-              project = labels["project"];
-            }
-            if (labels && (("owner" in labels) || ("Owner" in labels))) {
-              owner = labels["owner"];
-            }
-            if (owner && project) {
-              compliant = "Yes"
-            }
-
-            return {
-              name,
-              vpcId,
-              region,
-              id,
-              accountId,
-              provider,
-              owner,
-              project,
-              type,
-              subnetId,
-              publicIp,
-              privateIp,
-              state,
-              labels,
-              compliant,
-              selfLink,
-              securityGroups,
-              interfaceIds,
-              zone,
-            };
-          });
-
-          setVpcResourceVms([...infraVms]);
-        }
-      });
-    } catch (e) {
-      console.log("error", e);
-    }
-  };
-
-  useEffect(() => {
-    if (vpcResourceVms.length) {
-      dispatch(setResourceFetchedEntities(vpcResourceVms));
-    }
-  }, [vpcResourceVms]);
-
-  return { vpcResourceVms, fetchVpcResourcesVms };
+	return { vpcResourceVms, fetchVpcResourcesVms };
 };

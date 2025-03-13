@@ -26,24 +26,24 @@ const { ListInternetGatewaysRequest } = require("@/_proto/infra-sdk/output/cloud
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourceInternetGatewaysRequest = new ListInternetGatewaysRequest();
 
 export const useFetchVpcResourceInternetGateways = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourceInternetGateways, setVpcResourceInternetGateways] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourceInternetGatewaysRequest.setProvider(provider);
-  vpcResourceInternetGatewaysRequest.setVpcId(id);
-  vpcResourceInternetGatewaysRequest.setRegion(region);
-  vpcResourceInternetGatewaysRequest.setAccountId(accountId);
-
-  const fetchVpcResourceInternetGateways = () => {
-    try {
-      infraSdkResourcesClient.listInternetGateways(vpcResourceInternetGatewaysRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListInternetGatewaysRequest();
+      request.setProvider(prov);
+      request.setVpcId(id);
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listInternetGateways(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getIgwsList();
         if (data) {
-          const infraInternetGateways = data.map((InternetGateway: any) => {
+          const result = data.map((InternetGateway: any) => {
             const name = InternetGateway.getName();
             const id = InternetGateway.getId();
             const vpcId = InternetGateway.getAttachedVpcId();
@@ -75,10 +75,25 @@ export const useFetchVpcResourceInternetGateways = (provider: string, region: st
               selfLink,
             };
           });
-
-          setVpcResourceInternetGateways([...infraInternetGateways]);
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
+    });
+  };
+
+  const fetchVpcResourceInternetGateways = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourceInternetGateways(results);
     } catch (e) {
       console.log("error", e);
     }

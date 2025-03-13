@@ -26,24 +26,24 @@ const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_
 import { BACKEND_API_PREFIX } from "@/common/constants";
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourceACLsRequest = new ListACLsRequest();
 
 export const useFetchVpcResourceACLs = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourceACLs, setVpcResourceACLs] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourceACLsRequest.setProvider(provider);
-  vpcResourceACLsRequest.setVpcId(id);
-  vpcResourceACLsRequest.setRegion(region);
-  vpcResourceACLsRequest.setAccountId(accountId);
-
-  const fetchVpcResourceACLs = () => {
-    try {
-      infraSdkResourcesClient.listACLs(vpcResourceACLsRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListACLsRequest();
+      request.setProvider(prov);
+      request.setVpcId(id);
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listACLs(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getAclsList();
         if (data) {
-          const infraACLs = data.map((acl: any) => {
+          const result = data.map((acl: any) => {
             const name = acl.getName();
             const id = acl.getId();
             const vpcId = acl.getVpcId();
@@ -78,11 +78,26 @@ export const useFetchVpcResourceACLs = (provider: string, region: string, id: st
               selfLink,
             };
           });
-
-          setVpcResourceACLs([...infraACLs]);
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
-    } catch (e) {
+    });
+  };
+
+  const fetchVpcResourceACLs = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourceACLs(results);
+    } catch(e) {
       console.log("error", e);
     }
   };

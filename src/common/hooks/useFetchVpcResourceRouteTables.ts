@@ -26,24 +26,24 @@ const { ListRouteTablesRequest } = require("@/_proto/infra-sdk/output/cloud_pb")
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourceRouteTablesRequest = new ListRouteTablesRequest();
 
 export const useFetchVpcResourceRouteTables = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourceRouteTables, setVpcResourceRouteTables] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourceRouteTablesRequest.setProvider(provider);
-  vpcResourceRouteTablesRequest.setVpcId(id);
-  vpcResourceRouteTablesRequest.setRegion(region);
-  vpcResourceRouteTablesRequest.setAccountId(accountId);
-
-  const fetchVpcResourceRouteTables = () => {
-    try {
-      infraSdkResourcesClient.listRouteTables(vpcResourceRouteTablesRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListRouteTablesRequest();
+      request.setProvider(prov);
+      request.setVpcId(id);
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listRouteTables(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getRouteTablesList();
         if (data) {
-          const infraRouteTables = data.map((routeTable: any) => {
+          const result = data.map((routeTable: any) => {
             const name = routeTable.getName();
             const id = routeTable.getId();
             const provider = routeTable.getProvider();
@@ -81,10 +81,25 @@ export const useFetchVpcResourceRouteTables = (provider: string, region: string,
               selfLink
             };
           });
-
-          setVpcResourceRouteTables([...infraRouteTables]);
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
+    });
+  };
+
+  const fetchVpcResourceRouteTables = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourceRouteTables(results);
     } catch (e) {
       console.log("error", e);
     }

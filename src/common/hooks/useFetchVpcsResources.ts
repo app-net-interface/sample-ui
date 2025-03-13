@@ -28,7 +28,6 @@ const { ListVPCRequest } = require("@/_proto/infra-sdk/output/cloud_pb");
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcRequest = new ListVPCRequest();
 
 /**
  * Custom hook to fetch VPC resources from the infrastructure provider.
@@ -39,58 +38,111 @@ const vpcRequest = new ListVPCRequest();
  */
 export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId: string, region: string) => {
   const [vpcs, setVpcs] = useState<any[]>([]);
-
   const dispatch = useDispatch();
 
-  vpcRequest.setProvider(provider);
-  vpcRequest.setAccountId(accountId);
-  vpcRequest.setRegion(region)
-
-  /**
-   * Fetches VPCs from the infrastructure provider.
-   */
-  const fetchVpcs = () => {
+  // Modified fetchVpcs to handle "ALL_PROVIDERS"
+  const fetchVpcs = async () => {
     try {
-      infraSdkResourcesClient.listVPC(vpcRequest, {}, (err: any, response: any) => {
-        const data = response?.getVpcsList();
-
-        if (data) {
-          const infraVpcs = data.map((vpc: any) => {
-            const name = vpc.getName();
-            const id = vpc.getId();
-            const region = vpc.getRegion();
-            const type = "vpc";
-            const provider = vpc.getProvider();
-            const accountId = vpc.getAccountId();
-            const ipv4_cidr = vpc.getIpv4Cidr();
-            const ipv6_cidr = vpc.getIpv6Cidr();
-            const labels: any = {};
-
-            const labelsMap = vpc.getLabelsMap();
-            const selfLink = `https://${region}.console.aws.amazon.com/vpcconsole/home?region=${region}#VpcDetails:VpcId=${id}`;
-
-            labelsMap.forEach((value: string, key: string) => {
-              labels[key] = value;
-            });
-
-            return {
-              name,
-              id,
-              region,
-              type,
-              provider,
-              ipv4_cidr,
-              ipv6_cidr,
-              labels,
-              selfLink,
-              accountId,
-            };
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(
+          providers.map(
+            (prov) =>
+              new Promise<any[]>((resolve, reject) => {
+                const request = new ListVPCRequest();
+                request.setProvider(prov);
+                // Assume accountId and region are empty when ALL_PROVIDERS is selected
+                request.setAccountId("");
+                request.setRegion("");
+                infraSdkResourcesClient.listVPC(request, {}, (err: any, response: any) => {
+                  if (err) return reject(err);
+                  const data = response?.getVpcsList();
+                  if (data) {
+                    const infraVpcs = data.map((vpc: any) => {
+                      // ...existing mapping code...
+                      const name = vpc.getName();
+                      const id = vpc.getId();
+                      const region = vpc.getRegion();
+                      const type = "vpc";
+                      const prov = vpc.getProvider();
+                      const accId = vpc.getAccountId();
+                      const ipv4_cidr = vpc.getIpv4Cidr();
+                      const ipv6_cidr = vpc.getIpv6Cidr();
+                      const labels: any = {};
+                      const labelsMap = vpc.getLabelsMap();
+                      const selfLink = `https://${region}.console.aws.amazon.com/vpcconsole/home?region=${region}#VpcDetails:VpcId=${id}`;
+                      labelsMap.forEach((value: string, key: string) => {
+                        labels[key] = value;
+                      });
+                      return {
+                        name,
+                        id,
+                        region,
+                        type,
+                        provider: prov,
+                        ipv4_cidr,
+                        ipv6_cidr,
+                        labels,
+                        selfLink,
+                        accountId: accId,
+                      };
+                    });
+                    resolve(infraVpcs);
+                  } else {
+                    resolve([]);
+                  }
+                });
+              })
+          )
+        );
+        responses.forEach((res) => (results = results.concat(res)));
+      } else {
+        await new Promise<void>((resolve, reject) => {
+          const request = new ListVPCRequest();
+          request.setProvider(provider);
+          request.setAccountId(accountId);
+          request.setRegion(region);
+          infraSdkResourcesClient.listVPC(request, {}, (err: any, response: any) => {
+            if (err) return reject(err);
+            const data = response?.getVpcsList();
+            if (data) {
+              const infraVpcs = data.map((vpc: any) => {
+                // ...existing mapping code...
+                const name = vpc.getName();
+                const id = vpc.getId();
+                const region = vpc.getRegion();
+                const type = "vpc";
+                const prov = vpc.getProvider();
+                const accId = vpc.getAccountId();
+                const ipv4_cidr = vpc.getIpv4Cidr();
+                const ipv6_cidr = vpc.getIpv6Cidr();
+                const labels: any = {};
+                const labelsMap = vpc.getLabelsMap();
+                const selfLink = `https://${region}.console.aws.amazon.com/vpcconsole/home?region=${region}#VpcDetails:VpcId=${id}`;
+                labelsMap.forEach((value: string, key: string) => {
+                  labels[key] = value;
+                });
+                return {
+                  name,
+                  id,
+                  region,
+                  type,
+                  provider: prov,
+                  ipv4_cidr,
+                  ipv6_cidr,
+                  labels,
+                  selfLink,
+                  accountId: accId,
+                };
+              });
+              results = infraVpcs;
+            }
+            resolve();
           });
-          // console.log("infra VPCs ", infraVpcs)
-
-          setVpcs([...infraVpcs]);
-        }
-      });
+        });
+      }
+      setVpcs(results);
     } catch (e) {
       console.log("error", e);
     }

@@ -26,24 +26,24 @@ const { ListNATGatewaysRequest } = require("@/_proto/infra-sdk/output/cloud_pb")
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourceNATGatewaysRequest = new ListNATGatewaysRequest();
 
 export const useFetchVpcResourceNATGateways = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourceNATGateways, setVpcResourceNATGateways] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourceNATGatewaysRequest.setProvider(provider);
-  vpcResourceNATGatewaysRequest.setVpcId(id);
-  vpcResourceNATGatewaysRequest.setRegion(region);
-  vpcResourceNATGatewaysRequest.setAccountId(accountId);
-
-  const fetchVpcResourceNATGateways = () => {
-    try {
-      infraSdkResourcesClient.listNATGateways(vpcResourceNATGatewaysRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListNATGatewaysRequest();
+      request.setProvider(prov);
+      request.setVpcId(id);
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listNATGateways(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getNatGatewaysList();
         if (data) {
-          const infraNATGateways = data.map((NATGateway: any) => {
+          const result = data.map((NATGateway: any) => {
             const name = NATGateway.getName();
             const id = NATGateway.getId();
             const accountId = NATGateway.getAccountId();
@@ -79,10 +79,25 @@ export const useFetchVpcResourceNATGateways = (provider: string, region: string,
               // additional_properties,
             };
           });
-
-          setVpcResourceNATGateways([...infraNATGateways]);
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
+    });
+  };
+
+  const fetchVpcResourceNATGateways = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourceNATGateways(results);
     } catch (e) {
       console.log("error", e);
     }

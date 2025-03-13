@@ -26,24 +26,24 @@ const { ListSecurityGroupsRequest } = require("@/_proto/infra-sdk/output/cloud_p
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
-const vpcResourceSecurityGroupsRequest = new ListSecurityGroupsRequest();
 
 export const useFetchVpcResourceSecurityGroups = (provider: string, region: string, id: string, accountId: string) => {
   const [vpcResourceSecurityGroups, setVpcResourceSecurityGroups] = useState<any[]>([]);
 
   const dispatch = useDispatch();
 
-  vpcResourceSecurityGroupsRequest.setProvider(provider);
-  vpcResourceSecurityGroupsRequest.setVpcId(id);
-  vpcResourceSecurityGroupsRequest.setRegion(region);
-  vpcResourceSecurityGroupsRequest.setAccountId(accountId);
-
-  const fetchVpcResourceSecurityGroups = () => {
-    try {
-      infraSdkResourcesClient.listSecurityGroups(vpcResourceSecurityGroupsRequest, {}, (err: any, response: any) => {
+  const fetchForProvider = (prov: string): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const request = new ListSecurityGroupsRequest();
+      request.setProvider(prov);
+      request.setVpcId(id);
+      request.setRegion(region);
+      request.setAccountId(accountId);
+      infraSdkResourcesClient.listSecurityGroups(request, {}, (err: any, response: any) => {
+        if (err) return reject(err);
         const data = response?.getSecurityGroupsList();
         if (data) {
-          const infraSecurityGroups = data.map((securityGroup: any) => {
+          const result = data.map((securityGroup: any) => {
             const name = securityGroup.getName();
             const id = securityGroup.getId();
             const provider = securityGroup.getProvider();
@@ -79,11 +79,25 @@ export const useFetchVpcResourceSecurityGroups = (provider: string, region: stri
               selfLink,
             };
           });
-
-          setVpcResourceSecurityGroups([...infraSecurityGroups]);
-          console.log("Security group info ", infraSecurityGroups)
+          resolve(result);
+        } else {
+          resolve([]);
         }
       });
+    });
+  };
+
+  const fetchVpcResourceSecurityGroups = async () => {
+    try {
+      let results: any[] = [];
+      if (provider === "ALL_PROVIDERS") {
+        const providers = ["aws", "gcp", "azure"];
+        const responses = await Promise.all(providers.map(p => fetchForProvider(p)));
+        responses.forEach(res => results = results.concat(res));
+      } else {
+        results = await fetchForProvider(provider);
+      }
+      setVpcResourceSecurityGroups(results);
     } catch (e) {
       console.log("error", e);
     }

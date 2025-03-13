@@ -17,7 +17,6 @@ import ACLModal from '../../components/Modal/ACLModal';
 import VMModal from '../../components/Modal/VMModal';
 
 import {
-   // useFetchVpcsResources,
     useFetchVpcResourceSubnets,
     useFetchVpcResourceVms,
     useFetchVpcResourceSecurityGroups,
@@ -33,6 +32,7 @@ import '../../css/vpc.css';
 import { setSelectedAccountId } from "@/store/selectedRegionAccountId-slice/selectedRegionAccountIdSlice";
 import { sortedData, determineSortConfig, SortConfig } from "@/common/utils/sortingUtil";
 import { handleButtonClick, handleOpenModal } from "@/pages/MultiCloudInfra/Handlers";
+import { selectAggregatedVms } from "@/store/aggregatedSelectors";
 
 const MultiCloudInfra = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -49,7 +49,7 @@ const MultiCloudInfra = () => {
     const { vpcs } = useSelector((state: RootState) => state.infraResources); // retrieve vpcs from api
     const { selectedProvider, selectedAccountId } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
-
+    
     //const { vpcResources } =   useFetchVpcsResources(selectedProvider, selectedAccountId, region);
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSubnets, fetchVpcResourcesSubnets } = useFetchVpcResourceSubnets(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -75,12 +75,8 @@ const MultiCloudInfra = () => {
         project: vpc.project,
     }));
 
-     // Create a dummy fetch function for VPC button.
-     const fetchVpcs = async () => {
-        console.log("Dummy VPC fetch function called. vpcs:", vpcs);
-        return Promise.resolve(vpcs);
-    };
 
+ 
     // search function
     const search = (data: any[], searchTerm: string, keys: string[]) => {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
@@ -115,6 +111,10 @@ const MultiCloudInfra = () => {
     const igsSearch = search(vpcResourceInternetGateways, searchTerm, igsKeys);
     const publicIPsSearch = search(vpcResourcePublicIPs, searchTerm, publicIPsKeys);
 
+    const aggregatedVms = useSelector(selectAggregatedVms);
+    // New aggregated search result over all provider VMs
+    const allVmSearchResult = search(aggregatedVms, searchTerm, vmKeys);
+
     // timer counter
     useEffect(() => {
         if (lastUpdated) {
@@ -142,7 +142,6 @@ const MultiCloudInfra = () => {
     };
 
     const buttonData = [
-        { name: 'VPC', fetchFunction: fetchVpcs },
         { name: 'VM', fetchFunction: fetchVpcResourcesVms },
         { name: 'Subnet', fetchFunction: fetchVpcResourcesSubnets },
         { name: 'Security Group', fetchFunction: fetchVpcResourceSecurityGroups },
@@ -163,9 +162,8 @@ const MultiCloudInfra = () => {
 
     useEffect(() => {
         if (selectedView === 'VM') {
-            // Trigger the VM fetch using the new provider value.
             fetchVpcResourcesVms();
-        } else if (selectedView === 'Subnet') {
+                } else if (selectedView === 'Subnet') {
             fetchVpcResourcesSubnets();
         } else if (selectedView === 'Security Group') {
             fetchVpcResourceSecurityGroups();
@@ -191,10 +189,7 @@ const MultiCloudInfra = () => {
         else if (selectedView === 'Public IP') {
             fetchVpcResourcePublicIPs();
         }
-        else if (selectedView === 'VPC') {
-            fetchVpcs();
-        }
-
+              
     }, [selectedProvider, selectedAccountId, selectedView]);
 
     return (
@@ -313,7 +308,7 @@ const MultiCloudInfra = () => {
                             selectedVpc={selectedVpc}
                         />
                     </div>
-                ) : selectedView === 'Subnet' ? (
+                                ) : selectedView === 'Subnet' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                             <span onClick={() => handleSortClick('name')} className="w-1/4 px-2 py-2 text-center">Name</span>
