@@ -1,12 +1,3 @@
-
-export type OverlapDetail = {
-    sourceCIDR: string;
-    destinationCIDR: string;
-    overlapRange?: string; // Not computed in this example.
-    startIP: string;
-    endIP: string;
-};
-
 export function ipToBigInt(ip: string): bigint {
     const parts = ip.split(".").map(Number);
     if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) {
@@ -88,55 +79,124 @@ export function findOverlappingRange(
     }
 }
 
-export function compareCIDRLists(list1: string[], list2: string[]): OverlapDetail[] {
-    let overlaps: OverlapDetail[] = [];
-    for (let cidr1 of list1) {
-        if (!validateCIDR(cidr1)) {
-            console.error(`Invalid CIDR in list1: ${cidr1}`);
-            continue;
+// Replace the old OverlapCIDREntry type with new type:
+export type OverlapCIDREntry = {
+    cidr: string;
+    vpcId: string;
+    vpcName: string;
+    accountId: string;
+    provider: string;
+};
+
+export type OverlapGroup = {
+    entries: OverlapCIDREntry[];
+    startIP: string;
+    endIP: string;
+};
+
+export type CIDREntry = {
+    provider: string;
+    accountId: string;
+    name: string; // still exists for other uses
+    id: string;
+    cidr: string;
+};
+
+// Updated compareCIDRsWithinList using union-find to group overlapping subnets
+export function compareCIDRsWithinList(list: CIDREntry[]): OverlapGroup[] {
+    // Precompute parsed info for valid CIDRs
+    const parsedList = list.map((entry, idx) => {
+         try {
+             const parsed = parseCIDR(entry.cidr);
+             return { index: idx, entry, parsed };
+         } catch (e) {
+             console.error(`Invalid CIDR at index ${idx}: ${entry.cidr}`);
+             return null;
+         }
+    }).filter(x => x !== null) as { index: number, entry: CIDREntry, parsed: ReturnType<typeof parseCIDR> }[];
+
+    const n = parsedList.length;
+    // Initialize union-find structure
+    const parent = Array(n).fill(0).map((_, i) => i);
+    const find = (x: number): number => {
+        if (parent[x] !== x) {
+            parent[x] = find(parent[x]);
         }
-        for (let cidr2 of list2) {
-            if (!validateCIDR(cidr2)) {
-                console.error(`Invalid CIDR in list2: ${cidr2}`);
-                continue;
-            }
-            const overlap = findOverlappingRange(cidr1, cidr2);
-            if (overlap) {
-                overlaps.push({
-                    sourceCIDR: cidr1,
-                    destinationCIDR: cidr2,
-                    startIP: overlap.startIP,
-                    endIP: overlap.endIP
-                });
+        return parent[x];
+    };
+    const union = (x: number, y: number) => {
+        const rootX = find(x);
+        const rootY = find(y);
+        if (rootX !== rootY) {
+            parent[rootY] = rootX;
+        }
+    };
+
+    // Compare every pair; union if CIDRs overlap (i.e. intersection is non-empty)
+    for (let i = 0; i < n; i++) {
+        const pI = parsedList[i].parsed;
+        for (let j = i + 1; j < n; j++) {
+            const pJ = parsedList[j].parsed;
+            const start = pI.network > pJ.network ? pI.network : pJ.network;
+            const end = pI.broadcast < pJ.broadcast ? pI.broadcast : pJ.broadcast;
+            if (start <= end) { // they overlap
+                union(i, j);
             }
         }
     }
-    return overlaps;
+
+    // Group by root index
+    const groupsMap: { [key: number]: number[] } = {};
+    for (let i = 0; i < n; i++) {
+        const root = find(i);
+        if (!groupsMap[root]) {
+            groupsMap[root] = [];
+        }
+        groupsMap[root].push(i);
+    }
+
+    const groups: OverlapGroup[] = [];
+    // For each group with more than one member, compute the intersection range and list of entries (cidr and subnetId)
+    for (const key in groupsMap) {
+        const indices = groupsMap[key];
+        if (indices.length > 1) {
+            const entries = indices.map(i => ({
+                 provider: parsedList[i].entry.provider,
+                 accountId: parsedList[i].entry.accountId,
+                 vpcName: parsedList[i].entry.name,
+                 vpcId: parsedList[i].entry.id,
+                 cidr: parsedList[i].entry.cidr,
+            }));
+            
+            let groupStart = parsedList[indices[0]].parsed.network;
+            let groupEnd = parsedList[indices[0]].parsed.broadcast;
+            for (const i of indices) {
+                const p = parsedList[i].parsed;
+                if (p.network > groupStart) groupStart = p.network;
+                if (p.broadcast < groupEnd) groupEnd = p.broadcast;
+            }
+            groups.push({
+                entries,
+                startIP: bigIntToIP(groupStart),
+                endIP: bigIntToIP(groupEnd)
+            });
+        }
+    }
+    return groups;
 }
 
-export function compareCIDRsWithinList(list: string[]): OverlapDetail[] {
-    let overlaps: OverlapDetail[] = [];
-    for (let i = 0; i < list.length; i++) {
-        if (!validateCIDR(list[i])) {
-            console.error(`Invalid CIDR: ${list[i]}`);
-            continue;
-        }
-        for (let j = i + 1; j < list.length; j++) {
-            if (!validateCIDR(list[j])) {
-                console.error(`Invalid CIDR: ${list[j]}`);
-                continue;
-            }
-            const overlap = findOverlappingRange(list[i], list[j]);
-            if (overlap) {
-                overlaps.push({
-                    sourceCIDR: list[i],
-                    destinationCIDR: list[j],
-                    startIP: overlap.startIP,
-                    endIP: overlap.endIP
-                });
-            }
+export function flattenAndCompareCIDRs(list: CIDREntry[]): OverlapGroup[] {
+    console.log("[flattenAndCompareCIDRs] Received list:", list);
+    // Flatten each entry's comma-separated CIDRs.
+    const flattened: CIDREntry[] = [];
+    
+    for (const entry of list) {
+        const cidrParts = entry.cidr.split(',').map(s => s.trim()).filter(s => s);
+        for (const cidr of cidrParts) {
+            flattened.push({ ...entry, cidr });
         }
     }
-    return overlaps;
+    console.log("[flattenAndCompareCIDRs] Flattened list:", flattened);
+    return compareCIDRsWithinList(flattened);
 }
 

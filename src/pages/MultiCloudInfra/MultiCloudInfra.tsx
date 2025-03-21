@@ -15,6 +15,7 @@ import SecurityGroupModal from '../../components/Modal/SecurityGroupModal';
 import PublicIPModal from '../../components/Modal/PublicIPModal';
 import ACLModal from '../../components/Modal/ACLModal';
 import VMModal from '../../components/Modal/VMModal';
+import CIDROverlapModal from '@/components/Modal/CIDROverlapModal';
 
 import {
     useFetchVpcResourceSubnets,
@@ -32,7 +33,7 @@ import '../../css/vpc.css';
 import { setSelectedAccountId } from "@/store/selectedRegionAccountId-slice/selectedRegionAccountIdSlice";
 import { sortedData, determineSortConfig, SortConfig } from "@/common/utils/sortingUtil";
 import { handleButtonClick, handleOpenModal } from "@/pages/MultiCloudInfra/Handlers";
-import { selectAggregatedVms } from "@/store/aggregatedSelectors";
+import { useFetchOverlapIPs } from "@/common/hooks/useFetchOverlapIPs"; // added import
 
 const MultiCloudInfra = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +42,7 @@ const MultiCloudInfra = () => {
     const [selectedVpcId, setSelectedVpcId] = useState(''); // track current vpc id (for modal)
     const [selectedRow, setSelectedRow] = useState(null);
     const [selectedView, setSelectedView] = useState('VPC');
+    const [selectedOverlapCIDR, setSelectedOverlapCIDR] = useState(null); // new state for overlapping CIDRs
 
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [timeSinceUpdate, setTimeSinceUpdate] = useState<string>('just now');
@@ -50,7 +52,6 @@ const MultiCloudInfra = () => {
     const { selectedProvider, selectedAccountId } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
     
-    //const { vpcResources } =   useFetchVpcsResources(selectedProvider, selectedAccountId, region);
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSubnets, fetchVpcResourcesSubnets } = useFetchVpcResourceSubnets(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSecurityGroups, fetchVpcResourceSecurityGroups } = useFetchVpcResourceSecurityGroups(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -61,6 +62,7 @@ const MultiCloudInfra = () => {
     const { vpcResourceNATGateways, fetchVpcResourceNATGateways } = useFetchVpcResourceNATGateways(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceInternetGateways, fetchVpcResourceInternetGateways } = useFetchVpcResourceInternetGateways(selectedProvider, '', '', selectedAccountId);
     const { vpcResourcePublicIPs, fetchVpcResourcePublicIPs } = useFetchVpcResourcePublicIPs(selectedProvider, '', selectedVpcId, selectedAccountId);
+    const { overlappedCIDRs, fetchVpcResourcesOverlappedIP} =  useFetchOverlapIPs(selectedProvider, '', selectedVpcId, selectedAccountId); // added hook call
 
     const vpcData = vpcs.map(vpc => ({
         id: vpc.id,
@@ -111,10 +113,6 @@ const MultiCloudInfra = () => {
     const igsSearch = search(vpcResourceInternetGateways, searchTerm, igsKeys);
     const publicIPsSearch = search(vpcResourcePublicIPs, searchTerm, publicIPsKeys);
 
-    const aggregatedVms = useSelector(selectAggregatedVms);
-    // New aggregated search result over all provider VMs
-    const allVmSearchResult = search(aggregatedVms, searchTerm, vmKeys);
-
     // timer counter
     useEffect(() => {
         if (lastUpdated) {
@@ -152,6 +150,7 @@ const MultiCloudInfra = () => {
         { name: 'NAT Gateway', fetchFunction: fetchVpcResourceNATGateways },
         { name: 'Internet Gateway', fetchFunction: fetchVpcResourceInternetGateways },
         { name: 'Public IP', fetchFunction: fetchVpcResourcePublicIPs },
+        { name: 'Overlapping IPs', fetchFunction: fetchVpcResourcesOverlappedIP },
     ];
 
     const handleVPCView = () => {
@@ -189,8 +188,29 @@ const MultiCloudInfra = () => {
         else if (selectedView === 'Public IP') {
             fetchVpcResourcePublicIPs();
         }
-              
+        else if (selectedView === 'Overlapping IPs') {
+            fetchVpcResourcesOverlappedIP();
+        }       
     }, [selectedProvider, selectedAccountId, selectedView]);
+
+    // Add a useEffect to debug overlappedCIDRs when view is Overlapping IPs.
+    useEffect(() => {
+        if (selectedView === 'Overlapping IPs') {
+            console.log('DEBUG: Overlapping IPs view selected, overlappedCIDRs:', overlappedCIDRs);
+        }
+    }, [selectedView, overlappedCIDRs]);
+
+    // Add useEffect to log overlappedCIDRs whenever they update
+    useEffect(() => {
+        console.log('Overlapped CIDRs:', overlappedCIDRs);
+    }, [overlappedCIDRs]);
+
+    // Auto-open modal for Overlapping IPs view
+    useEffect(() => {
+      if (selectedView === 'Overlapping IPs') {
+        setIsModalOpen(true);
+      }
+    }, [selectedView]);
 
     return (
         <DefaultLayout>
@@ -582,6 +602,14 @@ const MultiCloudInfra = () => {
                             isModalOpen={isModalOpen}
                             onRequestClose={() => setIsModalOpen(false)}
                             selectedRouter={selectedVpc}
+                        />
+                    </div>
+                ) : selectedView === 'Overlapping IPs' ? (
+                    <div>
+                        <CIDROverlapModal
+                            isModalOpen={isModalOpen}
+                            onRequestClose={() => setIsModalOpen(false)}
+                            overlappingCIDRs={overlappedCIDRs}
                         />
                     </div>
                 ) : (
