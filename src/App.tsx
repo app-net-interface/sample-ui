@@ -46,6 +46,7 @@ import { LoginPage } from "@/components/views/login-page/LoginPage";
 import Home from './pages/Dashboard/Home';
 import { VPCConnectionDashboard } from "@/components/views/vpc-connection-dashboard";
 import MultiCloudInfra from "./pages/MultiCloudInfra/MultiCloudInfra";
+import VPCView from "./pages/VPCView/VPCView";
 import SecurityGroups from './pages/SecurityGroups/SecurityGroups';
 import ClusterResources from "./pages/Kubernetes/Kubernetes"
 import ListNetworkDomain from "./pages/NetworkDomain/ListNetworkDomain";
@@ -62,6 +63,7 @@ import { UserPolicyAttachment } from "./components/views/user-policy-attachment"
 import { MonitoringPolicy } from "./components/views/monitoring-policy/MonitoringPolicy";
 // import SecurityGroups from "./pages/SecurityGroups/SecurityGroups";
 import Error404 from "./pages/404";
+import VPCGraph from "./pages/VPCGraph/VPCGraph";
 
 
 function App() {
@@ -75,6 +77,12 @@ function App() {
         {/* <Route path={RoutePaths.INFRA_RESOURCE_DASHBOARD} element={<Dashboard />} /> */}
         <Route path={RoutePaths.VPC_CONNECTION_DASHBOARD} element={<VPCConnectionDashboard />} />
         <Route path={RoutePaths.MULTI_CLOUD_INFRA_RESOURCE_DASHBOARD} element={<MultiCloudInfra />} />
+         {/* New VPCView route */}
+         <Route path={RoutePaths.VPC_VIEW} element={<VPCView />} />
+         <Route path={RoutePaths.VPC_GRAPH} element={<VPCGraph />} />
+
+
+
         <Route path={RoutePaths.SECURITY_GROUPS} element={<SecurityGroups />} />
 
         <Route path={RoutePaths.NETWORK_DOMAINS} element={<ListNetworkDomain />} />

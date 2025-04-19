@@ -168,6 +168,10 @@ const Sidebar = ({
                       link: "/multi-cloud-infra-resources",
                     },
                     {
+                      text: "VPC View",
+                      link: "/multi-cloud-infra-resources",
+                    },
+                    {
                       text: "K8S Resources",
                       link: "/list-cluster-resources",
                     },

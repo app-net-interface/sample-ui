@@ -139,7 +139,14 @@ const MultiCloudInfra = () => {
         setSortConfig(newConfig);
     };
 
+    const handleVPCView = () => {
+        setSelectedView('VPC');
+        setIsModalOpen(false);
+        setSelectedVpcId('');
+    }
+
     const buttonData = [
+        { name: 'VPC', fetchFunction: handleVPCView },
         { name: 'VM', fetchFunction: fetchVpcResourcesVms },
         { name: 'Subnet', fetchFunction: fetchVpcResourcesSubnets },
         { name: 'Security Group', fetchFunction: fetchVpcResourceSecurityGroups },
@@ -152,12 +159,6 @@ const MultiCloudInfra = () => {
         { name: 'Public IP', fetchFunction: fetchVpcResourcePublicIPs },
         { name: 'Overlapping IPs', fetchFunction: fetchVpcResourcesOverlappedIP },
     ];
-
-    const handleVPCView = () => {
-        setSelectedView('VPC');
-        setIsModalOpen(false);
-        setSelectedVpcId('');
-    }
 
     useEffect(() => {
         if (selectedView === 'VM') {
