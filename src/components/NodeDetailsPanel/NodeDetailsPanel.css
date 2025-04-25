@@ -1,0 +1,212 @@
+.node-details-panel {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 400px;
+  max-height: calc(100vh - 40px); /* Overall panel max height */
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 13px;
+  color: #1f2937;
+  z-index: 10;
+  display: flex; /* Needed for flex-grow */
+  flex-direction: column; /* Stack header and content vertically */
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.panel-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  color: #6b7280;
+}
+
+.close-button:hover {
+  color: #1f2937;
+}
+
+
+.panel-content {
+  padding: 0; /* Padding is handled by table cells */
+  overflow-y: auto; /* Make the main content area scrollable */
+  flex-grow: 1; /* Allow content to take up remaining space */
+  /* Optional: Add some padding if needed, but table padding might suffice */
+  /* padding: 0 14px 14px 14px; */
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Style for regular rows */
+.details-table > tbody > tr > td {
+  padding: 8px 14px; /* Consistent padding */
+  vertical-align: top;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Remove bottom border for the last row */
+.details-table > tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+/* Style for the cell containing the <details> element */
+.collapsible-row > td {
+  padding: 0; /* Remove padding for the details cell */
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-key {
+  font-weight: 500;
+  color: #4b5563;
+  white-space: nowrap;
+  padding-right: 16px;
+  width: 35%;
+  word-break: break-all;
+}
+
+.detail-value {
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: #1f2937;
+}
+
+
+/* --- Styles for Collapsible Section --- */
+.details-block {
+  width: 100%;
+}
+
+.summary-key {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 500;
+  color: #4b5563;
+  background-color: #f9fafb;
+}
+
+.summary-key::-webkit-details-marker {
+  display: none;
+}
+
+.summary-key::before {
+  content: '►';
+  font-size: 0.8em;
+  margin-right: 8px;
+  color: #9ca3af;
+  transition: transform 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+.details-block[open] > .summary-key::before {
+  transform: rotate(90deg);
+}
+
+
+/* Container for array items */
+.nested-array-content {
+    padding: 0;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    /* --- Add scroll for nested content --- */
+    max-height: 200px; /* Adjust max height as needed */
+    overflow-y: auto; /* Enable vertical scroll */
+}
+
+.nested-keyvalue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.nested-keyvalue-table td {
+  padding: 6px 14px 6px 30px;
+  vertical-align: top;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.95em;
+}
+
+.nested-keyvalue-table tr:last-child td {
+  border-bottom: none;
+}
+
+.nested-detail-key {
+  font-weight: normal;
+  color: #6b7280;
+  white-space: nowrap;
+  padding-right: 10px;
+  width: 35%;
+  word-break: break-all;
+}
+
+.nested-detail-value {
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: #374151;
+}
+
+.nested-empty {
+    padding: 6px 14px 6px 30px;
+    font-style: italic;
+    color: #9ca3af;
+    font-size: 0.95em;
+}
+
+
+/* --- Value formatting helpers --- */
+.null-value {
+  color: #9ca3af;
+  font-style: italic;
+}
+.bool-true {
+  color: #10b981;
+  font-weight: 500;
+}
+.bool-false {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* --- Link Styling (Applied to both top-level and nested values) --- */
+.detail-value a,
+.nested-detail-value a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+.detail-value a:hover,
+.nested-detail-value a:hover {
+  text-decoration: underline;
+}
+
+.no-details-message {
+  color: #6b7280;
+  padding: 10px 0;
+  text-align: center;
+}

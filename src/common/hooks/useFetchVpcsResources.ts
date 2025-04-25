@@ -43,6 +43,11 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
   // Modified fetchVpcs to handle "ALL_PROVIDERS"
   const fetchVpcs = async () => {
     try {
+      if (!provider || !accountId ) {
+        console.log('Skipping VPC fetch: Missing provider, accountId, or region.');
+        setVpcs([]); // Clear existing VPCs if params become invalid
+        return;
+      }
       let results: any[] = [];
       if (provider === "ALL_PROVIDERS") {
         const providers = ["aws", "gcp", "azure"];
