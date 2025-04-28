@@ -128,16 +128,16 @@ const ModalComponent: React.FC<ModalComponentProps> = ({ isModalOpen, onRequestC
                                 <div className="text-gray-400 mt-5">
                                     Route Table ID
                                     <div className="text-black">
-                                        {selectedVpcEndpoint.routeTableIds || "N/A"}
+                                        {selectedVpcEndpoint.routeTableIdsList || "N/A"}
                                     </div>
                                 </div>
                                 <div className="text-gray-400 mt-5">
                                     Subnet ID
                                     <div className="text-black">
-                                        {selectedVpcEndpoint.subnetIds && selectedVpcEndpoint.subnetIds.split(',').map((subnetId, index) => (
+                                        {selectedVpcEndpoint.subnetIdsList && selectedVpcEndpoint.subnetIdsList.split(',').map((subnetId, index) => (
                                             <React.Fragment key={index}>
                                                 {subnetId}
-                                                {index < selectedVpcEndpoint.subnetIds.split(',').length - 1 && <br />}
+                                                {index < selectedVpcEndpoint.subnetIdsList.split(',').length - 1 && <br />}
                                             </React.Fragment>
                                         ))}
                                     </div>

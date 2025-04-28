@@ -381,11 +381,18 @@ const VPCGraphInternal: React.FC = () => {
             <option value="">Select VPC</option>
             {vpcs
               .filter(vpc => vpc.accountId === selectedAccountId || vpc.account_id === selectedAccountId)
-              .map((vpc) => (
-                <option key={vpc.id || vpc.vpc_id} value={vpc.id || vpc.vpc_id}>
-                  {vpc.id || vpc.vpc_id} {vpc.name ? `– ${vpc.name}` : (vpc.tags?.Name ? `– ${vpc.tags.Name}` : '')}
-                </option>
-              ))}
+              .map((vpc) => {
+                // Determine the display name - prioritize name or tag, fall back to ID
+                const vpcName = vpc.name || vpc.tags?.Name;
+                const vpcId = vpc.id || vpc.vpc_id;
+                const displayText = vpcName ? `${vpcName} (${vpcId})` : vpcId; // Show Name (ID) or just ID
+
+                return (
+                  <option key={vpcId} value={vpcId}>
+                    {displayText}
+                  </option>
+                );
+              })}
           </select>
           <button
             onClick={handleShowDetailsClick}

@@ -43,7 +43,7 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
   // Modified fetchVpcs to handle "ALL_PROVIDERS"
   const fetchVpcs = async () => {
     try {
-      if (!provider || !accountId ) {
+      if (!provider) {
         console.log('Skipping VPC fetch: Missing provider, accountId, or region.');
         setVpcs([]); // Clear existing VPCs if params become invalid
         return;
