@@ -45,7 +45,7 @@ export const useFetchVpcResourceSecurityGroups = (provider: string, region: stri
         if (data) {
           const result = data.map((securityGroup: any) => {
             const name = securityGroup.getName();
-            const id = securityGroup.getId();
+            const sgId = securityGroup.getId();
             const provider = securityGroup.getProvider();
             const accountId = securityGroup.getAccountId();
             const vpcId = securityGroup.getVpcId();
@@ -56,18 +56,20 @@ export const useFetchVpcResourceSecurityGroups = (provider: string, region: stri
 
             const labels: any = {};
             const labelsMap = securityGroup.getLabelsMap();
-            const rules: any = {};
-            const rulesMap = securityGroup.getRulesList();
-
             labelsMap.forEach((value: string, key: string) => {
               labels[key] = value;
             });
-            rulesMap.forEach((value: string, key: string) => {
-              rules[key] = value;
+
+            const rulesList = securityGroup.getRulesList();
+            const rules: { [key: number]: any } = {};
+
+            rulesList.forEach((rule: any, index: number) => {
+              rules[index] = rule;
             });
+
             return {
               name,
-              id,
+              id: sgId,
               provider,
               accountId,
               attatchedInstances,
@@ -99,7 +101,7 @@ export const useFetchVpcResourceSecurityGroups = (provider: string, region: stri
       }
       setVpcResourceSecurityGroups(results);
     } catch (e) {
-      console.log("error", e);
+      console.log("error fetching security groups:", e);
     }
   };
 

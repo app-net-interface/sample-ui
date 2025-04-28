@@ -1,4 +1,23 @@
-import React, { useState, useEffect } from "react";
+/**
+ * Copyright (c) 2024 Cisco Systems, Inc. and its affiliates
+ * All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http:www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
@@ -33,25 +52,26 @@ import '../../css/vpc.css';
 import { setSelectedAccountId } from "@/store/selectedRegionAccountId-slice/selectedRegionAccountIdSlice";
 import { sortedData, determineSortConfig, SortConfig } from "@/common/utils/sortingUtil";
 import { handleButtonClick, handleOpenModal } from "@/pages/MultiCloudInfra/Handlers";
-import { useFetchOverlapIPs } from "@/common/hooks/useFetchOverlapIPs"; // added import
+import { useFetchOverlapIPs } from "@/common/hooks/useFetchOverlapIPs";
+import { searchSecurityGroups } from "./securityGroupSearchHelper";
 
 const MultiCloudInfra = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedVpc, setSelectedVpc] = useState(null); // track current vpc
-    const [selectedVpcId, setSelectedVpcId] = useState(''); // track current vpc id (for modal)
+    const [selectedVpc, setSelectedVpc] = useState(null);
+    const [selectedVpcId, setSelectedVpcId] = useState('');
     const [selectedRow, setSelectedRow] = useState(null);
     const [selectedView, setSelectedView] = useState('VPC');
-    const [selectedOverlapCIDR, setSelectedOverlapCIDR] = useState(null); // new state for overlapping CIDRs
+    const [selectedOverlapCIDR, setSelectedOverlapCIDR] = useState(null);
 
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [timeSinceUpdate, setTimeSinceUpdate] = useState<string>('just now');
     const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
-    // api
-    const { vpcs } = useSelector((state: RootState) => state.infraResources); // retrieve vpcs from api
+
+    const { vpcs } = useSelector((state: RootState) => state.infraResources);
     const { selectedProvider, selectedAccountId } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
-    
+
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSubnets, fetchVpcResourcesSubnets } = useFetchVpcResourceSubnets(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceSecurityGroups, fetchVpcResourceSecurityGroups } = useFetchVpcResourceSecurityGroups(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -62,7 +82,7 @@ const MultiCloudInfra = () => {
     const { vpcResourceNATGateways, fetchVpcResourceNATGateways } = useFetchVpcResourceNATGateways(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { vpcResourceInternetGateways, fetchVpcResourceInternetGateways } = useFetchVpcResourceInternetGateways(selectedProvider, '', '', selectedAccountId);
     const { vpcResourcePublicIPs, fetchVpcResourcePublicIPs } = useFetchVpcResourcePublicIPs(selectedProvider, '', selectedVpcId, selectedAccountId);
-    const { overlappedCIDRs, fetchVpcResourcesOverlappedIP} =  useFetchOverlapIPs(selectedProvider, '', selectedVpcId, selectedAccountId); // added hook call
+    const { overlappedCIDRs, fetchVpcResourcesOverlappedIP } = useFetchOverlapIPs(selectedProvider, '', selectedVpcId, selectedAccountId);
 
     const vpcData = vpcs.map(vpc => ({
         id: vpc.id,
@@ -77,17 +97,16 @@ const MultiCloudInfra = () => {
         project: vpc.project,
     }));
 
-
- 
-    // search function
     const search = (data: any[], searchTerm: string, keys: string[]) => {
+        if (!searchTerm || !data) return data || [];
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
         return data.filter(item =>
-            keys.some(key => item[key]?.toLowerCase().includes(lowerCaseSearchTerm))
+            item && keys.some(key =>
+                item.hasOwnProperty(key) && item[key] != null && String(item[key]).toLowerCase().includes(lowerCaseSearchTerm)
+            )
         );
     };
 
-    // search keys
     const vpcKeys = ['id', 'name', 'accountId', 'region'];
     const sgKeys = ['id', 'name', 'accountId', 'region', 'vpcId'];
     const vmKeys = ['id', 'name', 'accountId', 'provider', 'owner', 'project', 'type', 'subnetId', 'publicIp', 'state', 'compliant'];
@@ -100,9 +119,8 @@ const MultiCloudInfra = () => {
     const igsKeys = ['id', 'name', 'provider', 'accountId', 'region', 'vpcId', 'state'];
     const publicIPsKeys = ['id', 'name', 'provider', 'accountId', 'region', 'vpcId', 'state'];
 
-    // serach functions
     const vpcSearch = search(vpcData, searchTerm, vpcKeys);
-    const sgSearch = search(vpcResourceSecurityGroups, searchTerm, sgKeys);
+    const sgSearch = searchSecurityGroups(vpcResourceSecurityGroups, searchTerm);
     const vmSearch = search(vpcResourceVms, searchTerm, vmKeys);
     const subnetSearch = search(vpcResourceSubnets, searchTerm, subnetKeys);
     const aclSearch = search(vpcResourceACLs, searchTerm, aclKeys);
@@ -113,7 +131,6 @@ const MultiCloudInfra = () => {
     const igsSearch = search(vpcResourceInternetGateways, searchTerm, igsKeys);
     const publicIPsSearch = search(vpcResourcePublicIPs, searchTerm, publicIPsKeys);
 
-    // timer counter
     useEffect(() => {
         if (lastUpdated) {
             const interval = setInterval(() => {
@@ -133,7 +150,6 @@ const MultiCloudInfra = () => {
         }
     }, [selectedAccountId]);
 
-    // sorting funciton
     const handleSortClick = (key: string) => {
         const newConfig = determineSortConfig(sortConfig, key);
         setSortConfig(newConfig);
@@ -163,67 +179,88 @@ const MultiCloudInfra = () => {
     useEffect(() => {
         if (selectedView === 'VM') {
             fetchVpcResourcesVms();
-                } else if (selectedView === 'Subnet') {
+        } else if (selectedView === 'Subnet') {
             fetchVpcResourcesSubnets();
         } else if (selectedView === 'Security Group') {
             fetchVpcResourceSecurityGroups();
-        }
-        else if (selectedView === 'ACL') {
+        } else if (selectedView === 'ACL') {
             fetchVpcResourceACLs();
-        }
-        else if (selectedView === 'Routers') {
+        } else if (selectedView === 'Routers') {
             fetchVpcResourceRouters();
-        }
-        else if (selectedView === 'Route Table') {
+        } else if (selectedView === 'Route Table') {
             fetchVpcResourceRouteTables();
-        }
-        else if (selectedView === 'VPC Endpoint') {
+        } else if (selectedView === 'VPC Endpoint') {
             fetchVpcResourceVPCEndpoints();
-        }
-        else if (selectedView === 'NAT Gateway') {
+        } else if (selectedView === 'NAT Gateway') {
             fetchVpcResourceNATGateways();
-        }
-        else if (selectedView === 'Internet Gateway') {
+        } else if (selectedView === 'Internet Gateway') {
             fetchVpcResourceInternetGateways();
-        }
-        else if (selectedView === 'Public IP') {
+        } else if (selectedView === 'Public IP') {
             fetchVpcResourcePublicIPs();
-        }
-        else if (selectedView === 'Overlapping IPs') {
+        } else if (selectedView === 'Overlapping IPs') {
             fetchVpcResourcesOverlappedIP();
-        }       
+        }
     }, [selectedProvider, selectedAccountId, selectedView]);
 
-    // Add a useEffect to debug overlappedCIDRs when view is Overlapping IPs.
     useEffect(() => {
         if (selectedView === 'Overlapping IPs') {
             console.log('DEBUG: Overlapping IPs view selected, overlappedCIDRs:', overlappedCIDRs);
         }
     }, [selectedView, overlappedCIDRs]);
 
-    // Add useEffect to log overlappedCIDRs whenever they update
     useEffect(() => {
         console.log('Overlapped CIDRs:', overlappedCIDRs);
     }, [overlappedCIDRs]);
 
-    // Auto-open modal for Overlapping IPs view
     useEffect(() => {
-      if (selectedView === 'Overlapping IPs') {
-        setIsModalOpen(true);
-      }
+        if (selectedView === 'Overlapping IPs') {
+            setIsModalOpen(true);
+        }
+    }, [selectedView]);
+
+    const searchPlaceholder = useMemo(() => {
+        switch (selectedView) {
+            case 'VPC':
+                return "Search VPCs by id, name, region...";
+            case 'VM':
+                return "Search VMs by id, name, type, state...";
+            case 'Subnet':
+                return "Search Subnets by id, name, cidrblock...";
+            case 'Security Group':
+                return "Search SGs by id, name, or rule (e.g., source=0.0.0.0/0 and direction=ingress)";
+            case 'ACL':
+                return "Search ACLs by id, name, vpcId...";
+            case 'Routers':
+                return "Search Routers by id, name, vpcId...";
+            case 'Route Table':
+                return "Search Route Tables by id, name, vpcId...";
+            case 'VPC Endpoint':
+                return "Search Endpoints by id, name, service...";
+            case 'NAT Gateway':
+                return "Search NAT GWs by id, name, state...";
+            case 'Internet Gateway':
+                return "Search IGWs by id, name, state...";
+            case 'Public IP':
+                return "Search Public IPs by id, name, state...";
+            case 'Overlapping IPs':
+                return "Search not applicable for Overlapping IPs";
+            default:
+                return "Search resources...";
+        }
     }, [selectedView]);
 
     return (
         <DefaultLayout>
             <Breadcrumb pageName="Multi-cloud Infrastructure Resources" />
             <div className="flex justify-between">
-                <div className="flex flex-col w-1/6">
+                <div className="flex flex-col w-1/3">
                     <input
                         type="text"
-                        placeholder="Search by id, name, etc."
+                        placeholder={searchPlaceholder}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         className="input-field dark:bg-black"
+                        disabled={selectedView === 'Overlapping IPs'}
                     />
                 </div>
                 <ProviderButtons onProviderButtonClick={handleVPCView}></ProviderButtons>
@@ -259,19 +296,17 @@ const MultiCloudInfra = () => {
             </div>
             <div className="mt-3">
                 {selectedView === 'Security Group' ? (
-                    // Render table for Security Group
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-
+                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center cursor-pointer">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center cursor-pointer">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center cursor-pointer">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center cursor-pointer">VPC ID</span>
                         </div>
                         <div>
                             {sortedData(sgSearch, sortConfig).map((group, idx) => (
                                 <div
-                                    key={idx}
+                                    key={group.id || idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
                                     onClick={() => {
                                         setSelectedRow(group.id);
@@ -280,15 +315,21 @@ const MultiCloudInfra = () => {
                                         handleOpenModal(group, setSelectedVpc, setIsModalOpen);
                                     }}
                                 >
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
+                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name || 'N/A'}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
+                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId || 'N/A'}</span>
                                 </div>
                             ))}
+                            {sgSearch.length === 0 && searchTerm && (
+                                <div className="text-center p-4 text-gray-500 dark:text-gray-400">No security groups found matching your search criteria.</div>
+                            )}
+                            {vpcResourceSecurityGroups.length === 0 && !searchTerm && (
+                                <div className="text-center p-4 text-gray-500 dark:text-gray-400">No security groups loaded. Check provider/account selection or wait for data.</div>
+                            )}
                         </div>
                         <SecurityGroupModal
-                            isModalOpen={isModalOpen}
+                            isModalOpen={isModalOpen && selectedView === 'Security Group'}
                             onRequestClose={() => setIsModalOpen(false)}
                             selectedSecurityGroup={selectedVpc}
                         />
@@ -298,10 +339,9 @@ const MultiCloudInfra = () => {
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                             <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
                             <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
-                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-2 py-2 text-center">Provider</span>
-
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-4 py-2 text-center">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-4 py-2 text-center">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-4 py-2 text-center">Provider</span>
                         </div>
                         <div>
                             {sortedData(vmSearch, sortConfig).map((group, idx) => (
@@ -324,12 +364,12 @@ const MultiCloudInfra = () => {
                             ))}
                         </div>
                         <VMModal
-                            isModalOpen={isModalOpen}
+                            isModalOpen={isModalOpen && selectedView === 'VM'}
                             onRequestClose={() => setIsModalOpen(false)}
                             selectedVpc={selectedVpc}
                         />
                     </div>
-                                ) : selectedView === 'Subnet' ? (
+                ) : selectedView === 'Subnet' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                             <span onClick={() => handleSortClick('name')} className="w-1/4 px-2 py-2 text-center">Name</span>
@@ -371,7 +411,6 @@ const MultiCloudInfra = () => {
                             <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
                             <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
                             <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
-
                         </div>
                         <div>
                             {sortedData(aclSearch, sortConfig).map((group, idx) => (
@@ -389,7 +428,6 @@ const MultiCloudInfra = () => {
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
-
                                 </div>
                             ))}
                         </div>
@@ -413,7 +451,6 @@ const MultiCloudInfra = () => {
                                 <div
                                     key={idx}
                                     className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-
                                     onClick={() => {
                                         setSelectedRow(group.id);
                                     }}
@@ -494,7 +531,6 @@ const MultiCloudInfra = () => {
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
-
                                 </div>
                             ))}
                         </div>
@@ -523,8 +559,7 @@ const MultiCloudInfra = () => {
                                     }}
                                     onDoubleClick={() => {
                                         handleOpenModal(group, setSelectedVpc, setIsModalOpen);
-                                    }
-                                    }
+                                    }}
                                 >
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
@@ -563,7 +598,6 @@ const MultiCloudInfra = () => {
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId || "N/A"}</span>
                                     <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
-
                                 </div>
                             ))}
                         </div>
@@ -614,7 +648,6 @@ const MultiCloudInfra = () => {
                         />
                     </div>
                 ) : (
-                    // Render default vpcSearch table
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                             <span onClick={() => handleSortClick('name')} className="w-1/4 px-1 py-2 text-center">Name</span>
