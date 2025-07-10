@@ -43,6 +43,7 @@ import IconNode from '@/components/GraphNodes/IconNode';
 import '@/components/GraphNodes/IconNode.css';
 import NodeDetailsPanel from '@/components/NodeDetailsPanel/NodeDetailsPanel'; // Import the new component
 import '@/components/NodeDetailsPanel/NodeDetailsPanel.css'; // Import its CSS
+import '@/css/flow-controls.css'; // Import modern controls styles
 
 // *** Import DefaultLayout and Breadcrumb ***
 import DefaultLayout from '@/layout/DefaultLayout';
@@ -60,6 +61,76 @@ import {
 // --- ADJUST NODE DIMENSIONS for layout ---
 const nodeWidth = 48;
 const nodeHeight = 48;
+
+// After the imports, add edge style constants
+const EDGE_STYLES = {
+  subnet_routetable: { 
+    stroke: '#2196F3', 
+    strokeWidth: 2,
+    animated: true       // Animate subnet to route table connections
+  },
+  routetable_gateway: { 
+    stroke: '#00E5FF', 
+    strokeWidth: 2,
+    animated: true       // Animate route table to gateway connections
+  },
+  instance_subnet: { 
+    stroke: '#4CAF50', 
+    strokeWidth: 2,
+    animated: false      // Static instance-subnet connections
+  },
+  security_group: { 
+    stroke: '#FF5722', 
+    strokeWidth: 2,
+    animated: false      // Static security group connections
+  },
+  acl: { 
+    stroke: '#9C27B0', 
+    strokeWidth: 2,
+    animated: false      // Static ACL connections
+  },
+  default: { 
+    stroke: '#90A4AE', 
+    strokeWidth: 1.5,
+    animated: false      // Static default connections
+  }
+};
+
+// Helper function to determine edge type
+const getEdgeStyle = (sourceType: string, targetType: string) => {
+  sourceType = sourceType.toLowerCase();
+  targetType = targetType.toLowerCase();
+  
+  // Check if either end is a route table
+  const hasRouteTable = sourceType.includes('routetable') || targetType.includes('routetable');
+  
+  // Sort the types to handle both directions
+  const types = [sourceType, targetType].sort().join('_');
+  
+  // Handle specific edge types
+  if (types.includes('subnet') && types.includes('routetable')) {
+    return EDGE_STYLES.subnet_routetable;
+  }
+  if (hasRouteTable && (types.includes('igw') || types.includes('vgw') || types.includes('natgateway'))) {
+    return EDGE_STYLES.routetable_gateway;
+  }
+  if (types.includes('instance') && types.includes('subnet')) {
+    return EDGE_STYLES.instance_subnet;
+  }
+  if (types.includes('securitygroup')) {
+    return EDGE_STYLES.security_group;
+  }
+  if (types.includes('acl')) {
+    return EDGE_STYLES.acl;
+  }
+  
+  // If the connection involves a route table but isn't handled above, use route table style
+  if (hasRouteTable) {
+    return EDGE_STYLES.subnet_routetable; // Use the same style as subnet-routetable for consistency
+  }
+  
+  return EDGE_STYLES.default;
+};
 
 
 const VPCGraphInternal: React.FC = () => {
@@ -199,12 +270,20 @@ const VPCGraphInternal: React.FC = () => {
         });
 
         // 2. Prepare initial edges
-        const initialEdges: Edge[] = vpcGraphData.edges.map(edge => ({
-            ...edge,
-            id: String(edge.id || `${String(edge.source)}-${String(edge.target)}`),
-            source: String(edge.source), 
-            target: String(edge.target), 
-        }));
+        const initialEdges: Edge[] = vpcGraphData.edges.map(edge => {
+            const sourceType = nodeTypeMap.get(edge.source);
+            const targetType = nodeTypeMap.get(edge.target);
+            const style = getEdgeStyle(sourceType || '', targetType || '');
+            
+            return {
+                ...edge,
+                id: String(edge.id || `${String(edge.source)}-${String(edge.target)}`),
+                source: String(edge.source),
+                target: String(edge.target),
+                style: style,
+                animated: style.animated // Use the animated property from the style
+            };
+        });
         // console.log("Initial Edges (source/target):", initialEdges.map(e => ({ s: e.source, t: e.target })));
 
 
@@ -506,8 +585,14 @@ const VPCGraphInternal: React.FC = () => {
             onPaneClick={handlePaneClick} // Ensure this is passed
             key={selectedVpcId}
           >
-            <Controls />
-            <Background variant={BackgroundVariant.Lines} gap={24} size={1} color='white' />
+            <Controls className="modern-controls" />
+            <Background 
+              variant={BackgroundVariant.Dots} 
+              gap={20} 
+              size={1} 
+              color="rgba(0, 0, 0, 0.05)" 
+              style={{ backgroundColor: 'transparent' }} 
+            />
           </ReactFlow>
         ) : (
           <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
