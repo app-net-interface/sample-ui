@@ -374,9 +374,16 @@ const VPCGraphInternal: React.FC = () => {
           <select
             value={selectedVpcId}
             onChange={e => {
-              setSelectedVpcId(e.target.value);
+              const newVpcId = e.target.value;
+              // Reset all states
+              setSelectedVpcId(newVpcId);
               setSelectedInstanceId('');
               setSelectedSubnetId('');
+              setNodes([]);
+              setEdges([]);
+              if (newVpcId) {
+                fetchVpcGraph(newVpcId);
+              }
             }}
             className="select-field"
             disabled={!selectedAccountId || !selectedProvider || !vpcs || vpcs.length === 0}
@@ -403,8 +410,12 @@ const VPCGraphInternal: React.FC = () => {
               <select
                 value={selectedInstanceId}
                 onChange={e => {
-                  setSelectedInstanceId(e.target.value);
-                  setSelectedSubnetId(''); // Clear subnet when instance is selected
+                  const newInstanceId = e.target.value;
+                  // Reset graph before updating selection
+                  setNodes([]);
+                  setEdges([]);
+                  setSelectedInstanceId(newInstanceId);
+                  setSelectedSubnetId('');
                 }}
                 className="select-field"
                 style={{ 
@@ -427,8 +438,12 @@ const VPCGraphInternal: React.FC = () => {
               <select
                 value={selectedSubnetId}
                 onChange={e => {
-                  setSelectedSubnetId(e.target.value);
-                  setSelectedInstanceId(''); // Clear instance when subnet is selected
+                  const newSubnetId = e.target.value;
+                  // Reset graph before updating selection
+                  setNodes([]);
+                  setEdges([]);
+                  setSelectedSubnetId(newSubnetId);
+                  setSelectedInstanceId('');
                 }}
                 className="select-field"
                 style={{ 
