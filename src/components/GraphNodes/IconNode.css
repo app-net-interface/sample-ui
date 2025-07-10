@@ -40,6 +40,12 @@
   display: block;
 }
 
+/* Make AWS node icons larger */
+.icon-node[class*="-aws-"] .node-icon {
+  width: 30px;
+  height: 30px;
+}
+
 .node-label {
   text-align: center;
   overflow: hidden;
@@ -90,6 +96,28 @@
   transform: translateX(-50%) translateY(0%); /* Reset Y transform */
 }
 
+/* --- Subnet Group Node Styling --- */
+.subnet-group-node {
+  border: 1px solid #a0a0a0; /* A subtle border for the container */
+  border-radius: 8px; /* Rounded corners */
+  background-color: rgba(240, 240, 240, 0.5); /* A very light, semi-transparent background */
+  width: 100%;
+  height: 100%;
+  padding: 20px; /* Add some padding inside the group */
+  box-sizing: border-box;
+}
+
+.subnet-group-label {
+  position: absolute;
+  top: -18px; /* Position the label just above the border */
+  left: 10px;
+  background: #fff; /* Give it a solid background to sit on top of the border */
+  padding: 0 5px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
 /* --- Edge Label Styling --- */
 
 /* Style the edge label text */
@@ -106,4 +134,10 @@
 
   /* Alternatively, hide it completely: */
   /* display: none !important; */
+}
+
+/* Make all graph edges thinner and a lighter gray */
+.react-flow__edge-path {
+  stroke-width: 1.5;
+  stroke: #b1b1b7;
 }

@@ -50,10 +50,9 @@ export const useFetchNetworkDomains = () => {
             const name = vpc.getName();
             const id = vpc.getId();
             const region = vpc.getRegion();
-            // const region = vpc.getRegion();
-            // const account_id = vpc.getAccountId();
+            const account_id = vpc.getAccountId();
             const type = "vpc";
-            return { id, name, provider:provider.toUpperCase(), type, region };
+            return { id, name, provider:provider.toUpperCase(), type, region,account_id };
           });
 
           setArray((prev) => {
@@ -75,7 +74,8 @@ export const useFetchNetworkDomains = () => {
           type: "VPC",
           provider: vpcNetwork.Provider,
           id: vpcNetwork.ID,
-          region: vpcNetwork.Region
+          region: vpcNetwork.Region,
+          account_id: vpcNetwork.AccountName
         }));
         setArray((prev) => {
           return [...prev, ...networkDomains];
@@ -93,7 +93,8 @@ export const useFetchNetworkDomains = () => {
           provider: "Cisco-SDWAN-vManage",
           id: vpnNetwork.ID,
           type: "VRF",
-          region: vpnNetwork.SegmentName
+          region: vpnNetwork.SegmentName,
+          account_id: ""
         }));
         setArray((prev) => {
           return [...prev, ...networkDomains];

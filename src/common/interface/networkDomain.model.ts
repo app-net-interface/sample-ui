@@ -24,4 +24,5 @@ export interface NetworkDomain {
   id: string;
   region: string;
   site_id?: string;
+  account_id?: string;
 }

@@ -167,11 +167,13 @@ export const NetworkDomainsConnectionCreator: FC = () => {
       content: <ObservabilityPolicy />,
       description: "Optional",
     },
+    /*
     {
       title: 'Attach Network Transport',
       content: <SlaObject />,
       description: "Optional",
     },
+    */
     {
       title: 'Review and Submit',
       content:

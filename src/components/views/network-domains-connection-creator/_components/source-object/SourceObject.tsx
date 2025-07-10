@@ -34,9 +34,9 @@ export const SourceObject: FC<SourceObjectProps> = ({ networkDomains }) => {
 
   const destinationId = watch("destination.id");
 
-  const sourceOptions = networkDomains?.map(({ id, name, provider, region }, index) => {
+  const sourceOptions = networkDomains?.map(({ id, account_id, name, provider, region }, index) => {
     return {
-      label: `${name} ( ${provider} | ${region} | ${id} ) `,
+      label: `${name} ( ${provider} | ${account_id} | ${region} | ${id} ) `,
       value: id,
       key: index + id,
       disabled: id === destinationId,

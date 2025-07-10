@@ -83,6 +83,7 @@ export const useFetchSummary = (accountId, vpcId) => {
             running: vmStatusMap.get('running') ?? 0,
             stopped: vmStatusMap.get('stopped') ?? 0,
             terminated: vmStatusMap.get('terminated') ?? 0,
+            unknown: vmStatusMap.get('unknown') ?? 0,
           },
           pod: {
             running: podStatusMap.get('running') ?? 0,

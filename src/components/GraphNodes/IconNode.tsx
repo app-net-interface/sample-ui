@@ -6,56 +6,69 @@ import './IconNode.css';
 interface IconNodeData {
   provider: string;
   resourceType: string;
-  // We don't strictly need 'label' here anymore if we use node.id
-  // Keep originalData if needed for click handlers etc.
+  label: string; // Expect the label to be passed in data
   originalData?: any;
+  isSelected?: boolean;  // Flag to indicate if this node is selected
 }
 
-const ICONS_BASE_PATH = '/assets/icons/'; // <-- Make sure this starts with '/' for public folder
+const ICONS_BASE_PATH = '/assets/icons/';
 const DEFAULT_ICON = `${ICONS_BASE_PATH}default.svg`;
 
-const IconNode: React.FC<NodeProps<IconNodeData>> = ({ id, data }) => {
-  const { provider = 'unknown', resourceType = 'unknown' } = data;
+const IconNode: React.FC<NodeProps<IconNodeData>> = ({ id, data, type }) => {
+  // Destructure label and isSelected from data, provide fallbacks
+  const { provider = 'unknown', resourceType = 'unknown', label = id, isSelected = false } = data;
 
-  // Ensure provider and resourceType are lowercase before constructing path
   const lowerProvider = provider.toLowerCase();
   const lowerResourceType = resourceType.toLowerCase();
   const iconPath = `${ICONS_BASE_PATH}${lowerProvider}/${lowerResourceType}.svg`;
 
-  // *** Add Log Here ***
-  console.log(`IconNode ID: ${id}, Provider: ${lowerProvider}, Type: ${lowerResourceType}, Path: ${iconPath}`);
+  // If the node is a group (our subnet container), render it differently.
+  if (type === 'group') {
+    return (
+      <div className="subnet-group-node">
+        <div className="subnet-group-label">{label}</div>
+      </div>
+    );
+  }
+
+  console.log(`IconNode ID: ${id}, Label: ${label}, Provider: ${lowerProvider}, Type: ${lowerResourceType}, Path: ${iconPath}`);
 
   return (
     <div className={`icon-node icon-node-${lowerProvider}-${lowerResourceType}`}>
-      {/* Ensure BOTH handles are present */}
       <Handle
         type="source"
         position={Position.Bottom}
         isConnectable={true}
-        className="single-handle" // Use a specific class
+        className="single-handle"
       />
       <Handle
         type="target"
         position={Position.Bottom}
         isConnectable={true}
-        className="single-handle" // Use the same specific class
+        className="single-handle"
       />
 
       <div className="icon-node-content">
         <img
-          src={iconPath} // Use the generated path
+          src={iconPath}
           alt={`${lowerResourceType} icon`}
           className="node-icon"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null;
-            // Log the error path before falling back
             console.error(`Failed to load icon at path: ${iconPath}. Falling back to default.`);
             target.src = DEFAULT_ICON;
             target.classList.add('icon-error');
           }}
         />
-        <div className="node-label" title={id}>{id}</div>
+        {/* Use data.label for the display, and id for the title tooltip */}
+        <div 
+          className="node-label" 
+          title={id}
+          style={{ color: isSelected ? 'red' : 'inherit', fontWeight: isSelected ? 'bold' : 'normal' }}
+        >
+          {label}
+        </div>
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ export * from "./useFetchVpcResourceNATGateways";
 export * from "./useFetchVpcResourceInternetGateways";
 export * from "./useFetchVpcResourcePublicIPs";
 export * from "./useFetchVpcResourceACLs";
+export * from "./useFetchVpcResourceLoadBalancers"; // Renamed from useFetchResourceLoadBalancer
 export * from "./useFetchVpcAccounts";
 
 export * from "./useFetchVpcResourceClusters";

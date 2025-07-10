@@ -161,15 +161,19 @@ const Sidebar = ({
               />
               <SidebarNested
                 item={{
-                  text: "Infrastructure Resources",
+                  text: "Discovery",
                   children: [
                     {
                       text: "Cloud Resources",
                       link: "/multi-cloud-infra-resources",
                     },
                     {
-                      text: "VPC View",
-                      link: "/multi-cloud-infra-resources",
+                      text: "VPC Graph",
+                      link: "/vpc-graph",
+                    },
+                    {
+                      text: "VPC Connection Graph",
+                      link: "/vpc-connection-graph",
                     },
                     {
                       text: "K8S Resources",

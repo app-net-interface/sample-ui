@@ -26,6 +26,7 @@ export type QueriedNetworkDomain = {
   id: string
   type: string
   region: string
+  account_id: string
 }
 
 type State = {

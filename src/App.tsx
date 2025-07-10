@@ -64,8 +64,7 @@ import { MonitoringPolicy } from "./components/views/monitoring-policy/Monitorin
 // import SecurityGroups from "./pages/SecurityGroups/SecurityGroups";
 import Error404 from "./pages/404";
 import VPCGraph from "./pages/VPCGraph/VPCGraph";
-
-
+import VPCConnectionPage from "./pages/VPCGraph/VPCConnectionPage"
 function App() {
 
   return (
@@ -80,6 +79,7 @@ function App() {
          {/* New VPCView route */}
          <Route path={RoutePaths.VPC_VIEW} element={<VPCView />} />
          <Route path={RoutePaths.VPC_GRAPH} element={<VPCGraph />} />
+         <Route path={RoutePaths.VPC_CONNECTION_GRAPH} element={<VPCConnectionPage />} />
 
 
 

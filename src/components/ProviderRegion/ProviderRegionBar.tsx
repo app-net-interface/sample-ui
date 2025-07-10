@@ -11,21 +11,24 @@ import { setSelectedAccountId, setSelectedProvider, setSelectedRegion, setSelect
 interface ProviderButtonsProps {
     onProviderButtonClick: () => void;
     home?: boolean;
+    hideAllProviders?: boolean;
+    hideEnterprise?: boolean;
+    hideAWS?: boolean;
+    hideGCP?: boolean;
+    hideAzure?: boolean;
 }
 
 // Adjust provider mapping with exact string values
 const providerButtons = [
-  { name: 'AWS', value: InfraResourceProvider.AWS },
-  { name: 'GCP', value: InfraResourceProvider.GCP },
-  { name: 'Azure', value: InfraResourceProvider.AZURE },  // Use "Azure" exactly as in summarySlice
-  { name: 'Enterprise', value: InfraResourceProvider.ENTERPRISE }, // Updated from Cisco to Enterprise
-  { name: 'All Providers', value: InfraResourceProvider.ALL_PROVIDERS },
-];
-
-const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonClick, home = false }) => {
+    { name: 'AWS', value: InfraResourceProvider.AWS },
+    { name: 'GCP', value: InfraResourceProvider.GCP },
+    { name: 'Azure', value: InfraResourceProvider.AZURE },  // Use "Azure" exactly as in summarySlice
+    { name: 'Enterprise', value: InfraResourceProvider.ENTERPRISE }, // Updated from Cisco to Enterprise
+    { name: 'All Providers', value: InfraResourceProvider.ALL_PROVIDERS },
+]
+const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonClick, home = false, hideAllProviders = false, hideEnterprise = false,hideAWS = false, hideAzure = false, hideGCP = false }) => {
 
     const dispatch = useDispatch<AppDispatch>();
-
     // accounts + regions
     const { accounts } = useSelector((state: RootState) => state.infraResources);
     const { regions } = useSelector((state: RootState) => state.infraResources);
@@ -113,41 +116,55 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
         } else {
             switch (value) {
                 case InfraResourceProvider.AWS:
+                    if (!hideAWS) {
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.AWS));
                     setLastClickedProvider(InfraResourceProvider.AWS);
                     fetchAccounts();
                     fetchVpcs();
                     fetchRegions();
+                    }
                     break;
+                    
                 case InfraResourceProvider.GCP:
+                    if (!hideGCP) {
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.GCP));
                     setLastClickedProvider(InfraResourceProvider.GCP);
                     fetchAccounts();
                     fetchVpcs();
                     fetchRegions();
+                    }
                     break;
+                    
                 case InfraResourceProvider.AZURE:
+                    if (!hideAzure) {
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.AZURE));
                     setLastClickedProvider(InfraResourceProvider.AZURE);
                     fetchAccounts();
                     fetchVpcs();
                     fetchRegions();
+                    }
                     break;
+                    
                 case InfraResourceProvider.ENTERPRISE:
+                    if (!hideEnterprise) {
                     dispatch(setInfraVpcs([]));
                     dispatch(setSelectedProvider(InfraResourceProvider.ENTERPRISE));
                     setLastClickedProvider(InfraResourceProvider.ENTERPRISE);
+                    }
                     break;
+                
                 case InfraResourceProvider.ALL_PROVIDERS:
-                    dispatch(setInfraVpcs([]));
-                    dispatch(setSelectedProvider(InfraResourceProvider.ALL_PROVIDERS));
-                    setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
-                    fetchAccounts();
-                    fetchVpcs();
-                    fetchRegions();
+                    if (!hideAllProviders) {
+                        dispatch(setInfraVpcs([]));
+                        dispatch(setSelectedProvider(InfraResourceProvider.ALL_PROVIDERS));
+                        setLastClickedProvider(InfraResourceProvider.ALL_PROVIDERS);
+                        fetchAccounts();
+                        fetchVpcs();
+                        fetchRegions();
+                    }
                     break;
                 default:
                     console.log(`Unhandled exception, value is ${value}`);

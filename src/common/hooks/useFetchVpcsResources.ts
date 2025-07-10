@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
 
 import { setInfraVpcs } from "@/store/infra-resources-slice/infraResourcesSlice";
@@ -36,8 +36,14 @@ const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFI
  * @param region - The region to fetch VPCs from.
  * @returns An object containing the fetched VPCs and a function to fetch VPCs.
  */
-export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId: string, region: string) => {
+export const useFetchVpcsResources = (
+  provider?: InfraResourceProvider, // Allow provider to be optional
+  accountId?: string,
+  region?: string
+) => {
   const [vpcs, setVpcs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const dispatch = useDispatch();
 
   // Modified fetchVpcs to handle "ALL_PROVIDERS"
@@ -150,8 +156,17 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
       setVpcs(results);
     } catch (e) {
       console.log("error", e);
+      setError(e instanceof Error ? e : new Error('Failed to fetch VPCs'));
+      setVpcs([]); // Clear VPCs on error
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const clearVpcs = useCallback(() => {
+    setVpcs([]);
+    // console.log('VPCs cleared.');
+  }, []); // No dependencies needed for clearVpcs
 
   useEffect(() => {
     if (vpcs.length) {
@@ -159,5 +174,5 @@ export const useFetchVpcsResources = (provider: InfraResourceProvider, accountId
     }
   }, [vpcs]);
 
-  return { vpcs, fetchVpcs };
+  return { vpcs, fetchVpcs, clearVpcs, isLoading, error }; // Return clearVpcs
 };

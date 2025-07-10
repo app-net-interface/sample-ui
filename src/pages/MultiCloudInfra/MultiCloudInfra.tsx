@@ -35,6 +35,7 @@ import PublicIPModal from '../../components/Modal/PublicIPModal';
 import ACLModal from '../../components/Modal/ACLModal';
 import VMModal from '../../components/Modal/VMModal';
 import CIDROverlapModal from '@/components/Modal/CIDROverlapModal';
+import LoadBalancerModal from '../../components/Modal/LoadBalancerModal'; // ADD THIS
 
 import {
     useFetchVpcResourceSubnets,
@@ -47,6 +48,7 @@ import {
     useFetchVpcResourceNATGateways,
     useFetchVpcResourceInternetGateways,
     useFetchVpcResourcePublicIPs,
+    useFetchVpcResourceLoadBalancers, // Corrected import name
 } from "@/common/hooks";
 import '../../css/vpc.css';
 import { setSelectedAccountId } from "@/store/selectedRegionAccountId-slice/selectedRegionAccountIdSlice";
@@ -54,6 +56,7 @@ import { sortedData, determineSortConfig, SortConfig } from "@/common/utils/sort
 import { handleButtonClick, handleOpenModal } from "@/pages/MultiCloudInfra/Handlers";
 import { useFetchOverlapIPs } from "@/common/hooks/useFetchOverlapIPs";
 import { searchSecurityGroups } from "./securityGroupSearchHelper";
+import { calculateRunningCost } from "@/common/utils/costCalculator";
 
 const MultiCloudInfra = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -69,7 +72,7 @@ const MultiCloudInfra = () => {
     const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
     const { vpcs } = useSelector((state: RootState) => state.infraResources);
-    const { selectedProvider, selectedAccountId } = useSelector((state: RootState) => state.selectedResources);
+    const { selectedProvider, selectedAccountId, selectedRegion } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
 
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -83,6 +86,7 @@ const MultiCloudInfra = () => {
     const { vpcResourceInternetGateways, fetchVpcResourceInternetGateways } = useFetchVpcResourceInternetGateways(selectedProvider, '', '', selectedAccountId);
     const { vpcResourcePublicIPs, fetchVpcResourcePublicIPs } = useFetchVpcResourcePublicIPs(selectedProvider, '', selectedVpcId, selectedAccountId);
     const { overlappedCIDRs, fetchVpcResourcesOverlappedIP } = useFetchOverlapIPs(selectedProvider, '', selectedVpcId, selectedAccountId);
+    const { vpcResourceLoadBalancers, fetchVpcResourceLoadBalancers } = useFetchVpcResourceLoadBalancers(selectedProvider, '', selectedVpcId, selectedAccountId);
 
     const vpcData = vpcs.map(vpc => ({
         id: vpc.id,
@@ -118,6 +122,7 @@ const MultiCloudInfra = () => {
     const natGatewaysKeys = ['id', 'name', 'accountId', 'vpcId', 'region', 'state', 'publicIp', 'privateIp', 'subnetId'];
     const igsKeys = ['id', 'name', 'provider', 'accountId', 'region', 'vpcId', 'state'];
     const publicIPsKeys = ['id', 'name', 'provider', 'accountId', 'region', 'vpcId', 'state'];
+    const lbKeys = ['id', 'name', 'type', 'ipAddress', 'vpcId', 'region', 'accountId', 'state', 'provider'];
 
     const vpcSearch = search(vpcData, searchTerm, vpcKeys);
     const sgSearch = searchSecurityGroups(vpcResourceSecurityGroups, searchTerm);
@@ -130,6 +135,15 @@ const MultiCloudInfra = () => {
     const natGatewaysSearch = search(vpcResourceNATGateways, searchTerm, natGatewaysKeys);
     const igsSearch = search(vpcResourceInternetGateways, searchTerm, igsKeys);
     const publicIPsSearch = search(vpcResourcePublicIPs, searchTerm, publicIPsKeys);
+    const lbSearch = search(vpcResourceLoadBalancers, searchTerm, lbKeys);
+
+    const vmData = useMemo(() => vpcResourceVms.map(vm => ({
+        ...vm,
+        creationTimestamp: vm.creationTimestamp || vm.createTime,
+        instanceType: vm.instanceType || vm.machineType,
+    })), [vpcResourceVms]);
+
+    const sortedVms = useMemo(() => sortedData(search(vmData, searchTerm, vmKeys), sortConfig), [vmData, searchTerm, sortConfig]);
 
     useEffect(() => {
         if (lastUpdated) {
@@ -166,6 +180,7 @@ const MultiCloudInfra = () => {
         { name: 'VM', fetchFunction: fetchVpcResourcesVms },
         { name: 'Subnet', fetchFunction: fetchVpcResourcesSubnets },
         { name: 'Security Group', fetchFunction: fetchVpcResourceSecurityGroups },
+        { name: 'Load Balancer', fetchFunction: fetchVpcResourceLoadBalancers },
         { name: 'ACL', fetchFunction: fetchVpcResourceACLs },
         { name: 'Routers', fetchFunction: fetchVpcResourceRouters },
         { name: 'Route Table', fetchFunction: fetchVpcResourceRouteTables },
@@ -183,6 +198,8 @@ const MultiCloudInfra = () => {
             fetchVpcResourcesSubnets();
         } else if (selectedView === 'Security Group') {
             fetchVpcResourceSecurityGroups();
+        } else if (selectedView === 'Load Balancer') {
+            fetchVpcResourceLoadBalancers();
         } else if (selectedView === 'ACL') {
             fetchVpcResourceACLs();
         } else if (selectedView === 'Routers') {
@@ -228,6 +245,8 @@ const MultiCloudInfra = () => {
                 return "Search Subnets by id, name, cidrblock...";
             case 'Security Group':
                 return "Search SGs by id, name, or rule (e.g., source=0.0.0.0/0 and direction=ingress)";
+            case 'Load Balancer':
+                return "Search Load Balancers by id, name, type, ip...";
             case 'ACL':
                 return "Search ACLs by id, name, vpcId...";
             case 'Routers':
@@ -334,33 +353,92 @@ const MultiCloudInfra = () => {
                             selectedSecurityGroup={selectedVpc}
                         />
                     </div>
+                ) : selectedView === 'Load Balancer' ? (
+                    <div>
+                        <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                            <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/6 px-2 py-2 text-center cursor-pointer">ID</span>
+                            <span onClick={() => handleSortClick('ipAddress')} className="w-1/6 px-2 py-2 text-center cursor-pointer">IP Address</span>
+                            <span onClick={() => handleSortClick('type')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Type</span>
+                            <span onClick={() => handleSortClick('state')} className="w-1/6 px-2 py-2 text-center cursor-pointer">State</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                        </div>
+                        <div>
+                            {sortedData(lbSearch, sortConfig).map((lb, idx) => (
+                                <div
+                                    key={lb.id || idx}
+                                    className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === lb.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                    onClick={() => {
+                                        setSelectedRow(lb.id);
+                                    }}
+                                    onDoubleClick={() => {
+                                        handleOpenModal(lb, setSelectedVpc, setIsModalOpen);
+                                    }}
+                                >
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.name || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.id}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.ipAddress || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.type || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.state || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.vpcId || 'N/A'}</span>
+                                </div>
+                            ))}
+                            {lbSearch.length === 0 && searchTerm && (
+                                <div className="text-center p-4 text-gray-500 dark:text-gray-400">No load balancers found matching your search criteria.</div>
+                            )}
+                            {vpcResourceLoadBalancers.length === 0 && !searchTerm && (
+                                <div className="text-center p-4 text-gray-500 dark:text-gray-400">No load balancers loaded. Check provider/account selection or wait for data.</div>
+                            )}
+                        </div>
+                        <LoadBalancerModal
+                            isModalOpen={isModalOpen && selectedView === 'Load Balancer'}
+                            onRequestClose={() => setIsModalOpen(false)}
+                            selectedLoadBalancer={selectedVpc}
+                        />
+                    </div>
                 ) : selectedView === 'VM' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
-                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-4 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-4 py-2 text-center">VPC ID</span>
-                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-4 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/7 px-4 py-2 text-center cursor-pointer">ID</span>
+                            <span onClick={() => handleSortClick('state')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Status</span>
+                            <span onClick={() => handleSortClick('runningCost')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Running Cost</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/7 px-4 py-2 text-center cursor-pointer">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Provider</span>
                         </div>
                         <div>
-                            {sortedData(vmSearch, sortConfig).map((group, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                    onClick={() => {
-                                        setSelectedRow(group.id);
-                                    }}
-                                    onDoubleClick={() => {
-                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
-                                    }}
-                                >
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
-                                    <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
-                                </div>
+                            {sortedVms.map((row, key) => (
+                                <tr key={key}>
+                                    <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
+                                        <h5 className="font-medium text-black dark:text-white">{row.name}</h5>
+                                    </td>
+                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                        <p className="text-black dark:text-white">{row.id}</p>
+                                    </td>
+                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                        <p className="text-black dark:text-white">{row.state || 'N/A'}</p>
+                                    </td>
+                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                        <p className="text-black dark:text-white">
+                                            {
+                                                (() => {
+                                                    const cost = calculateRunningCost(row);
+                                                    return cost !== null ? `$${cost.toFixed(2)}` : 'N/A';
+                                                })()
+                                            }
+                                        </p>
+                                    </td>
+                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                        <p className="text-black dark:text-white">{row.accountId}</p>
+                                    </td>
+                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                        <p className="text-black dark:text-white">{row.vpcId}</p>
+                                    </td>
+                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                        <p className="text-black dark:text-white">{row.provider}</p>
+                                    </td>
+                                </tr>
                             ))}
                         </div>
                         <VMModal

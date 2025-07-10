@@ -29,7 +29,7 @@ import { CloudProviderServiceClient } from "@/_proto/infra-sdk/output/cloud_grpc
 
 const client = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
 
-interface VpcGraphData {
+export interface VpcGraphData { // Added export here
   nodes: Node[];
   edges: Edge[];
 }

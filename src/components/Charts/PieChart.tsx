@@ -1,8 +1,8 @@
 import { ApexOptions } from 'apexcharts';
-import React, { useState } from 'react';
+import React from 'react'; // Removed useState
 import ReactApexChart from 'react-apexcharts';
 
-interface PieChartState {
+interface PieChartProps { // Renamed interface for clarity
   title: string;
   series: number[];
 }
@@ -34,19 +34,8 @@ const options: ApexOptions = {
   },
 };
 
-const PieChart: React.FC<PieChartState> = ({ title, series }) => {
-  const [state, setState] = useState<PieChartState>({
-    title,
-    series,
-  });
-
-  const handleReset = () => {
-    setState((prevState) => ({
-      ...prevState,
-      series,
-    }));
-  };
-  handleReset;
+const PieChart: React.FC<PieChartProps> = ({ title, series }) => {
+  // Removed internal state and handleReset function, as they are not needed.
 
   return (
     <div className="sm:px-7.5 col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-5">
@@ -60,12 +49,12 @@ const PieChart: React.FC<PieChartState> = ({ title, series }) => {
 
       <div className="mb-2 h-64">
         <div id="PieChart" className="flex justify-center">
-          {state.series.every(value => value === 0) ? (
+          {series.every(value => value === 0) ? (
             <p className="text-lg mt-32">There are currently no running, stopped, or terminated states.</p>
           ) : (
             <ReactApexChart
               options={options}
-              series={state.series}
+              series={series}
               type="donut"
             />
           )}

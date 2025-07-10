@@ -38,6 +38,7 @@ const ListNetworkDomain = () => {
         type: item.type,
         provider: item.provider,
         region: item.region,
+        account_id: item.account_id,
         id: item.id,
     }));
 
@@ -45,6 +46,7 @@ const ListNetworkDomain = () => {
         row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.account_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.type.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -68,6 +70,7 @@ const ListNetworkDomain = () => {
                     <span className="w-1/4 px-4 py-2 text-center">Name</span>
                     <span className="w-1/4 px-2 py-2 text-center">Type</span>
                     <span className="w-1/4 px-1 py-2 text-center">Provider</span>
+                    <span className="w-1/4 px-1 py-2 text-center">Account</span>
                     <span className="w-1/4 px-1 py-2 text-center">Region</span>
                     <span className="w-1/4 px-1 py-2 text-center">ID</span>
                 </div>
@@ -77,8 +80,11 @@ const ListNetworkDomain = () => {
                             key={idx}
                             className={`dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 bg-white rounded-lg my-2 p-4 shadow`}
                         >
-                            <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.name}</span>                            <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.type.toUpperCase()}</span>
+                            <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.name}</span>                            
+                            <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.type.toUpperCase()}</span>
                             <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.provider}</span>
+                            <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.account_id}</span>
+
                             <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.region}</span>
                             <span className="w-1/4 px-4 py-2 flex text-center justify-center">{row.id}</span>
                         </div>

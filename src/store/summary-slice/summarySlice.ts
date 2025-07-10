@@ -58,7 +58,7 @@ export type Statuses = {
 }
 
 export type ResourceStatus = {
-  vm: { running: number, stopped: number, terminated: number },
+  vm: { running: number, stopped: number, terminated: number, unknown: number },
   pod: { running: number, pending: number, crash: number }
 }
 
@@ -196,6 +196,7 @@ const initialState: State = {
         running: 0,
         stopped: 0,
         terminated: 0,
+        unknown: 0,
       },
       pod: {
         running: 0,
@@ -208,6 +209,7 @@ const initialState: State = {
         running: 0,
         stopped: 0,
         terminated: 0,
+        unknown: 0,
       },
       pod: {
         running: 0,
@@ -220,6 +222,7 @@ const initialState: State = {
         running: 0,
         stopped: 0,
         terminated: 0,
+        unknown: 0,
       },
       pod: {
         running: 0,
@@ -232,6 +235,7 @@ const initialState: State = {
         running: 0,
         stopped: 0,
         terminated: 0,
+        unknown: 0,
       },
       pod: {
         running: 0,
@@ -243,7 +247,8 @@ const initialState: State = {
       vm: {
         running: 0,
         stopped: 0,
-        terminated: 0
+        terminated: 0,
+        unknown: 0
       },
       pod: {
         running: 0,

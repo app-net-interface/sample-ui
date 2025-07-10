@@ -97,7 +97,7 @@ const Home: React.FC = () => {
             <div className="space-y-4">
               <div className="py-4">
                 <PieChart 
-                  series={[status[provider].vm.running, status[provider].vm.stopped, status[provider].vm.terminated]} 
+                  series={[status[provider].vm.running, status[provider].vm.stopped, status[provider].vm.terminated,status[provider].vm.unknown]} 
                   title="VM States" 
                 />
               </div>
