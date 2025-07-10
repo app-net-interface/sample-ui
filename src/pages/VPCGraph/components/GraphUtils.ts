@@ -267,6 +267,104 @@ export const getSubgraph = (startNodeId: string, allNodes: RFNode[], allEdges: E
   return { nodes: subgraphNodes, edges: finalEdges };
 };
 
+export const getSubgraphForSubnet = (startNodeId: string, allNodes: RFNode[], allEdges: Edge[]): { nodes: RFNode[], edges: Edge[] } => {
+  if (!startNodeId) {
+    return { nodes: allNodes, edges: allEdges };
+  }
+
+  const nodeMap = new Map(allNodes.map(n => [n.id, n]));
+  const forwardAdj = new Map<string, string[]>();
+  const backwardAdj = new Map<string, string[]>();
+  
+  // Build both forward and backward adjacency lists
+  allEdges.forEach(edge => {
+    if (!forwardAdj.has(edge.source)) forwardAdj.set(edge.source, []);
+    if (!backwardAdj.has(edge.target)) backwardAdj.set(edge.target, []);
+    forwardAdj.get(edge.source)!.push(edge.target);
+    backwardAdj.get(edge.target)!.push(edge.source);
+  });
+
+  const getConnectedNodes = (id: string, forward: boolean = true): RFNode[] => {
+    const adj = forward ? forwardAdj : backwardAdj;
+    return (adj.get(id) || [])
+      .map(connectedId => nodeMap.get(connectedId))
+      .filter((node): node is RFNode => !!node);
+  };
+
+  const getConnectedNodesOfType = (id: string, type: string, forward: boolean = true): RFNode[] => {
+    const nodes = getConnectedNodes(id, forward);
+    return nodes.filter(node => getResourceType(node) === type.toLowerCase());
+  };
+
+  const startSubnet = nodeMap.get(startNodeId);
+  if (!startSubnet || getResourceType(startSubnet) !== 'subnet') {
+    return { nodes: allNodes, edges: allEdges };
+  }
+
+  const finalNodeIds = new Set<string>();
+  finalNodeIds.add(startNodeId);
+
+  // Add ACLs for this subnet
+  getConnectedNodesOfType(startNodeId, 'acl', true)
+    .concat(getConnectedNodesOfType(startNodeId, 'acl', false))
+    .forEach(acl => finalNodeIds.add(acl.id));
+
+  // Find route tables
+  const routeTables = getConnectedNodesOfType(startNodeId, 'routetable', true)
+    .concat(getConnectedNodesOfType(startNodeId, 'routetable', false));
+  
+  routeTables.forEach(rt => {
+    finalNodeIds.add(rt.id);
+    
+    // Add gateways connected to route tables
+    ['igw', 'vgw', 'router', 'natgateway'].forEach(gwType => {
+      getConnectedNodesOfType(rt.id, gwType, true)
+        .concat(getConnectedNodesOfType(rt.id, gwType, false))
+        .forEach(gw => finalNodeIds.add(gw.id));
+    });
+    
+    // Add other subnets connected to this route table
+    getConnectedNodesOfType(rt.id, 'subnet', true)
+      .concat(getConnectedNodesOfType(rt.id, 'subnet', false))
+      .filter(subnet => subnet.id !== startNodeId)
+      .forEach(subnet => {
+        finalNodeIds.add(subnet.id);
+        // Add ACLs for connected subnets
+        getConnectedNodesOfType(subnet.id, 'acl', true)
+          .concat(getConnectedNodesOfType(subnet.id, 'acl', false))
+          .forEach(acl => finalNodeIds.add(acl.id));
+      });
+  });
+
+  const subgraphNodes = allNodes
+    .filter(node => {
+      // Exclude instance nodes
+      if (getResourceType(node) === 'instance') return false;
+      return finalNodeIds.has(node.id);
+    })
+    .map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        isSelected: node.id === startNodeId
+      }
+    }));
+
+  const finalEdges = allEdges.filter(edge => {
+    const sourceNode = nodeMap.get(edge.source);
+    const targetNode = nodeMap.get(edge.target);
+    if (!sourceNode || !targetNode) return false;
+
+    // Skip edges connected to instances
+    if (getResourceType(sourceNode) === 'instance' || getResourceType(targetNode) === 'instance') {
+      return false;
+    }
+
+    return finalNodeIds.has(edge.source) && finalNodeIds.has(edge.target);
+  });
+
+  return { nodes: subgraphNodes, edges: finalEdges };
+};
 
 export const getLayoutedElements = (nodes: RFNode[], edges: Edge[], direction = 'LR') => {
   const dagreGraph = new dagre.graphlib.Graph();

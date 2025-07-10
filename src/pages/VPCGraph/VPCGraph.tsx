@@ -51,6 +51,7 @@ import DefaultLayout from '@/layout/DefaultLayout';
 import { 
   getLayoutedElements, 
   getSubgraph,
+  getSubgraphForSubnet,
   getResourceType,
   getNodeDisplayName,
 } from './components/GraphUtils';
@@ -66,6 +67,7 @@ const VPCGraphInternal: React.FC = () => {
 
   const [selectedVpcId, setSelectedVpcId] = useState<string>('');
   const [selectedInstanceId, setSelectedInstanceId] = useState<string>(''); // <-- ADD THIS STATE
+  const [selectedSubnetId, setSelectedSubnetId] = useState<string>(''); // Add subnet state
   const [selectedVpcDetails, setSelectedVpcDetails] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -239,8 +241,15 @@ const VPCGraphInternal: React.FC = () => {
             layoutedEdges = layoutResult.edges;
             console.log(`Subgraph generated. Node count: ${finalNodes.length}, Edge count: ${layoutedEdges.length}`);
 
+        } else if (selectedSubnetId) {
+            console.log(`Subnet selected: ${selectedSubnetId}. Generating subnet subgraph.`);
+            const subgraph = getSubgraphForSubnet(selectedSubnetId, allPreparedNodes, filteredEdges);
+            const layoutResult = getLayoutedElements(subgraph.nodes, subgraph.edges, 'LR');
+            finalNodes = layoutResult.nodes;
+            layoutedEdges = layoutResult.edges;
+            console.log(`Subnet subgraph generated. Node count: ${finalNodes.length}, Edge count: ${layoutedEdges.length}`);
         } else {
-            console.log("No instance selected. Using full graph (or filtered by unused).");
+            console.log("No instance or subnet selected. Using full graph (or filtered by unused).");
             const nodesForLayout = allPreparedNodes;
             const edgesForLayout = filteredEdges;
       
@@ -322,7 +331,7 @@ const VPCGraphInternal: React.FC = () => {
         setNodes([]);
         setEdges([]);
     }
-}, [vpcGraphData, selectedProvider, fitView, setNodes, setEdges, showIsolatedNodes, selectedInstanceId]); // Dependencies
+}, [vpcGraphData, selectedProvider, fitView, setNodes, setEdges, showIsolatedNodes, selectedInstanceId, selectedSubnetId]); // Dependencies
 
   // --- Node Click Handler ---
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -356,6 +365,7 @@ const VPCGraphInternal: React.FC = () => {
           () => { 
             setSelectedVpcId('');
             setSelectedInstanceId(''); // <-- RESET INSTANCE
+            setSelectedSubnetId(''); // Clear subnet when instance is selected
           }}
           hideAllProviders={true}
           hideEnterprise={true}
@@ -365,7 +375,8 @@ const VPCGraphInternal: React.FC = () => {
             value={selectedVpcId}
             onChange={e => {
               setSelectedVpcId(e.target.value);
-              setSelectedInstanceId(''); // <-- RESET INSTANCE
+              setSelectedInstanceId('');
+              setSelectedSubnetId('');
             }}
             className="select-field"
             disabled={!selectedAccountId || !selectedProvider || !vpcs || vpcs.length === 0}
@@ -374,11 +385,9 @@ const VPCGraphInternal: React.FC = () => {
             {vpcs
               .filter(vpc => vpc.accountId === selectedAccountId || vpc.account_id === selectedAccountId)
               .map((vpc) => {
-                // Determine the display name - prioritize name or tag, fall back to ID
                 const vpcName = vpc.name || vpc.tags?.Name;
                 const vpcId = vpc.id || vpc.vpc_id;
-                const displayText = vpcName ? `${vpcName} (${vpcId})` : vpcId; // Show Name (ID) or just ID
-
+                const displayText = vpcName ? `${vpcName} (${vpcId})` : vpcId;
                 return (
                   <option key={vpcId} value={vpcId}>
                     {displayText}
@@ -386,30 +395,74 @@ const VPCGraphInternal: React.FC = () => {
                 );
               })}
           </select>
-          {/* --- Instance Dropdown --- */}
-          <select
-            value={selectedInstanceId}
-            onChange={e => setSelectedInstanceId(e.target.value)}
-            className="select-field"
-            style={{ marginLeft: '10px' }}
-            disabled={!selectedVpcId || nodes.length === 0}
-          >
-            <option value="">Focus on Instance</option>
-            {nodes
-              .filter(node => getResourceType(node) === 'instance')
-              .map(instanceNode => (
-                <option key={instanceNode.id} value={instanceNode.id}>
-                  {getNodeDisplayName(instanceNode)}
-                </option>
-              ))}
-          </select>
+          
+          {/* Only show these dropdowns if a VPC is selected */}
+          {selectedVpcId && (
+            <>
+              {/* Instance Dropdown */}
+              <select
+                value={selectedInstanceId}
+                onChange={e => {
+                  setSelectedInstanceId(e.target.value);
+                  setSelectedSubnetId(''); // Clear subnet when instance is selected
+                }}
+                className="select-field"
+                style={{ 
+                  marginLeft: '10px',
+                  opacity: selectedSubnetId ? '0.5' : '1'
+                }}
+                disabled={!selectedVpcId || nodes.length === 0 || !!selectedSubnetId}
+              >
+                <option value="">Focus on Instance</option>
+                {nodes
+                  .filter(node => getResourceType(node) === 'instance')
+                  .map(instanceNode => (
+                    <option key={instanceNode.id} value={instanceNode.id}>
+                      {getNodeDisplayName(instanceNode)}
+                    </option>
+                  ))}
+              </select>
+
+              {/* Subnet Dropdown */}
+              <select
+                value={selectedSubnetId}
+                onChange={e => {
+                  setSelectedSubnetId(e.target.value);
+                  setSelectedInstanceId(''); // Clear instance when subnet is selected
+                }}
+                className="select-field"
+                style={{ 
+                  marginLeft: '10px',
+                  opacity: selectedInstanceId ? '0.5' : '1'
+                }}
+                disabled={!selectedVpcId || nodes.length === 0 || !!selectedInstanceId}
+              >
+                <option value="">Focus on Subnet</option>
+                {nodes
+                  .filter(node => getResourceType(node) === 'subnet')
+                  .map(subnetNode => (
+                    <option key={subnetNode.id} value={subnetNode.id}>
+                      {getNodeDisplayName(subnetNode)}
+                    </option>
+                  ))}
+              </select>
+            </>
+          )}
+
           {/* --- Checkbox to show isolated nodes --- */}
-          <label style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <label style={{ 
+            marginLeft: '20px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            cursor: selectedInstanceId || selectedSubnetId ? 'not-allowed' : 'pointer',
+            opacity: selectedInstanceId || selectedSubnetId ? '0.5' : '1'
+          }}>
             <input
               type="checkbox"
               checked={showIsolatedNodes}
               onChange={e => setShowIsolatedNodes(e.target.checked)}
               style={{ marginRight: '5px' }}
+              disabled={!!selectedInstanceId || !!selectedSubnetId}
             />
             Show unused resources
           </label>
