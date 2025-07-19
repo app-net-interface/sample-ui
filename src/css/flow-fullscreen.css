@@ -1,0 +1,29 @@
+.react-flow-full {
+  width: 100%;
+  height: 100%;
+}
+
+/* Fullscreen styles */
+:fullscreen .react-flow-full {
+  background-color: white;
+}
+
+:-webkit-full-screen .react-flow-full {
+  background-color: white;
+}
+
+:-moz-full-screen .react-flow-full {
+  background-color: white;
+}
+
+/* Container styles when in fullscreen */
+:fullscreen .react-flow__container {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* Ensure the controls stay visible in fullscreen */
+:fullscreen .react-flow__controls {
+  position: fixed;
+  z-index: 5;
+}

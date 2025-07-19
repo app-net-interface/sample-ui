@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setResourceFetchedEntities } from "@/store/infra-resources-slice/infraResourcesSlice";
 import { BACKEND_API_PREFIX } from "@/common/constants";
+import { create } from "lodash";
 
 const { ListInstancesRequest } = require("@/_proto/infra-sdk/output/cloud_pb");
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
@@ -88,6 +89,8 @@ export const useFetchVpcResourceVms = (provider: string, region: string, id: str
 							securityGroups: instance.getSecuritygroupidsList(),
 							interfaceIds: instance.getInterfaceidsList(),
 							zone: instance.getZone(),
+							createTime: instance.getCreatedAt(),
+							
 						};
 					});
 					resolve(infraVms);

@@ -36,6 +36,7 @@ import ACLModal from '../../components/Modal/ACLModal';
 import VMModal from '../../components/Modal/VMModal';
 import CIDROverlapModal from '@/components/Modal/CIDROverlapModal';
 import LoadBalancerModal from '../../components/Modal/LoadBalancerModal'; // ADD THIS
+import VpcContextBar from '@/components/common/VpcContextBar';
 
 import {
     useFetchVpcResourceSubnets,
@@ -56,7 +57,7 @@ import { sortedData, determineSortConfig, SortConfig } from "@/common/utils/sort
 import { handleButtonClick, handleOpenModal } from "@/pages/MultiCloudInfra/Handlers";
 import { useFetchOverlapIPs } from "@/common/hooks/useFetchOverlapIPs";
 import { searchSecurityGroups } from "./securityGroupSearchHelper";
-import { calculateRunningCost } from "@/common/utils/costCalculator";
+
 
 const MultiCloudInfra = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -137,11 +138,16 @@ const MultiCloudInfra = () => {
     const publicIPsSearch = search(vpcResourcePublicIPs, searchTerm, publicIPsKeys);
     const lbSearch = search(vpcResourceLoadBalancers, searchTerm, lbKeys);
 
-    const vmData = useMemo(() => vpcResourceVms.map(vm => ({
-        ...vm,
-        creationTimestamp: vm.creationTimestamp || vm.createTime,
-        instanceType: vm.instanceType || vm.machineType,
-    })), [vpcResourceVms]);
+    const vmData = useMemo(() => vpcResourceVms.map(vm => {
+        const mappedVm = {
+            ...vm,
+            creationTimestamp: vm.creationTimestamp || vm.createTime,
+            instanceType: vm.instanceType || vm.machineType,
+            state: vm.state?.toLowerCase() || 'unknown'
+        };
+        console.debug('Mapped VM data:', mappedVm);
+        return mappedVm;
+    }), [vpcResourceVms]);
 
     const sortedVms = useMemo(() => sortedData(search(vmData, searchTerm, vmKeys), sortConfig), [vmData, searchTerm, sortConfig]);
 
@@ -174,6 +180,16 @@ const MultiCloudInfra = () => {
         setIsModalOpen(false);
         setSelectedVpcId('');
     }
+
+    const handleClearVpcContext = () => {
+        setSelectedVpcId('');
+        setSelectedView('VPC');
+    };
+
+    const selectedVpcData = useMemo(() => {
+        if (!selectedVpcId) return null;
+        return vpcData.find(vpc => vpc.id === selectedVpcId) || null;
+    }, [selectedVpcId, vpcData]);
 
     const buttonData = [
         { name: 'VPC', fetchFunction: handleVPCView },
@@ -284,45 +300,68 @@ const MultiCloudInfra = () => {
                 </div>
                 <ProviderButtons onProviderButtonClick={handleVPCView}></ProviderButtons>
             </div>
-            <div style={{ marginBottom: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div className="flex justify-begin">
-                    {buttonData.map((button) => (
-                        <button
-                            className={`dark:border-white dark:text-white button-blue text-sm py-1 whitespace-nowrap ${selectedView === button.name ? 'selected' : ''}`}
-                            key={button.name}
-                            onClick={() =>
-                                handleButtonClick(
-                                    button.name,
-                                    async () => {
-                                        button.fetchFunction();
-                                        return Promise.resolve();
-                                    },
-                                    selectedAccountId,
-                                    setSelectedView,
-                                    setLastUpdated,
-                                    setIsModalOpen,
-                                    setSelectedAccountId
-                                )
-                            }
-                        >
-                            {button.name}
-                        </button>
-                    ))}
-                </div>
-                <div>
-                    <p>Last updated {timeSinceUpdate}</p>
-                </div>
+            
+            <VpcContextBar vpc={selectedVpcData} onClear={handleClearVpcContext} />
+
+            <div className="flex flex-wrap gap-2 mb-4">
+                {buttonData.map((button) => (
+                    <button
+                        className={`dark:border-white dark:text-white button-blue text-sm py-2 px-4 rounded-lg transition-colors duration-200 ${
+                            selectedView === button.name 
+                                ? 'bg-blue-600 text-white dark:bg-[#00437b]' 
+                                : 'hover:bg-blue-50 dark:hover:bg-[#1E3A8A]'
+                        }`}
+                        key={button.name}
+                        onClick={() =>
+                            handleButtonClick(
+                                button.name,
+                                async () => {
+                                    button.fetchFunction();
+                                    return Promise.resolve();
+                                },
+                                selectedAccountId,
+                                setSelectedView,
+                                setLastUpdated,
+                                setIsModalOpen,
+                                setSelectedAccountId
+                            )
+                        }
+                    >
+                        {button.name}
+                    </button>
+                ))}
             </div>
-            <div className="mt-3">
+            
+            <div className="flex justify-end mb-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Last updated {timeSinceUpdate}
+                </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
+                {selectedVpcId && selectedView !== 'VPC' && (
+                    <div className="mb-4 flex items-center space-x-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            Viewing resources in VPC: {selectedVpcData?.name || selectedVpcId}
+                        </span>
+                        <button
+                            onClick={handleClearVpcContext}
+                            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                            (Clear VPC context)
+                        </button>
+                    </div>
+                )}
+                
                 {selectedView === 'Security Group' ? (
-                    <div>
+                    <div className="space-y-4">
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                             <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center cursor-pointer">Name</span>
                             <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center cursor-pointer">ID</span>
                             <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center cursor-pointer">Account ID</span>
                             <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center cursor-pointer">VPC ID</span>
                         </div>
-                        <div>
+                        <div className={`space-y-2 ${selectedVpcId ? 'ring-1 ring-blue-200 dark:ring-blue-800 rounded-lg p-4' : ''}`}>
                             {sortedData(sgSearch, sortConfig).map((group, idx) => (
                                 <div
                                     key={group.id || idx}
@@ -399,47 +438,35 @@ const MultiCloudInfra = () => {
                 ) : selectedView === 'VM' ? (
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                            <span onClick={() => handleSortClick('name')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Name</span>
-                            <span onClick={() => handleSortClick('id')} className="w-1/7 px-4 py-2 text-center cursor-pointer">ID</span>
-                            <span onClick={() => handleSortClick('state')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Status</span>
-                            <span onClick={() => handleSortClick('runningCost')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Running Cost</span>
-                            <span onClick={() => handleSortClick('accountId')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Account ID</span>
-                            <span onClick={() => handleSortClick('vpcId')} className="w-1/7 px-4 py-2 text-center cursor-pointer">VPC ID</span>
-                            <span onClick={() => handleSortClick('provider')} className="w-1/7 px-4 py-2 text-center cursor-pointer">Provider</span>
+                            <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/6 px-4 py-2 text-center cursor-pointer">ID</span>
+                            <span onClick={() => handleSortClick('state')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Status</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Account ID</span>
+                            <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-4 py-2 text-center cursor-pointer">VPC ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Provider</span>
                         </div>
                         <div>
                             {sortedVms.map((row, key) => (
-                                <tr key={key}>
-                                    <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
-                                        <h5 className="font-medium text-black dark:text-white">{row.name}</h5>
-                                    </td>
-                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                        <p className="text-black dark:text-white">{row.id}</p>
-                                    </td>
-                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                        <p className="text-black dark:text-white">{row.state || 'N/A'}</p>
-                                    </td>
-                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                        <p className="text-black dark:text-white">
-                                            {
-                                                (() => {
-                                                    const cost = calculateRunningCost(row);
-                                                    return cost !== null ? `$${cost.toFixed(2)}` : 'N/A';
-                                                })()
-                                            }
-                                        </p>
-                                    </td>
-                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                        <p className="text-black dark:text-white">{row.accountId}</p>
-                                    </td>
-                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                        <p className="text-black dark:text-white">{row.vpcId}</p>
-                                    </td>
-                                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                        <p className="text-black dark:text-white">{row.provider}</p>
-                                    </td>
-                                </tr>
+                                <div
+                                    key={key}
+                                    className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === row.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                    onClick={() => setSelectedRow(row.id)}
+                                    onDoubleClick={() => handleOpenModal(row, setSelectedVpc, setIsModalOpen)}
+                                >
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.name || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.id || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.state || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.accountId || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.vpcId || 'N/A'}</span>
+                                    <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.provider || 'N/A'}</span>
+                                </div>
                             ))}
+                            {sortedVms.length === 0 && searchTerm && (
+                                <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VMs found matching your search criteria.</div>
+                            )}
+                            {sortedVms.length === 0 && !searchTerm && (
+                                <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VMs loaded. Check provider/account selection or wait for data.</div>
+                            )}
                         </div>
                         <VMModal
                             isModalOpen={isModalOpen && selectedView === 'VM'}
@@ -689,9 +716,9 @@ const MultiCloudInfra = () => {
                     <div>
                         <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                             <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
+                            <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center cursor-pointer">ID</span>
+                            <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center cursor-pointer">Account ID</span>
+                            <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center cursor-pointer">Provider</span>
                         </div>
                         <div>
                             {sortedData(routerSearch, sortConfig).map((group, idx) => (

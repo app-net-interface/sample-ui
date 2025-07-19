@@ -59,34 +59,6 @@ const HOURLY_COST_PER_INSTANCE_TYPE: { [key: string]: number } = {
  * @returns The calculated cost as a number, or null if calculation is not applicable.
  */
 export const calculateRunningCost = (instance: any): number | null => {
-  const { state, instanceType, creationTimestamp, createTime } = instance;
-
-  // Only calculate for running instances
-  if (String(state).toLowerCase() !== 'running') {
-    return null;
-  }
-
-  // Check for necessary data
-  const timestamp = creationTimestamp || createTime;
-  if (!timestamp || !instanceType) {
-    return null;
-  }
-
-  const hourlyRate = HOURLY_COST_PER_INSTANCE_TYPE[instanceType] || HOURLY_COST_PER_INSTANCE_TYPE['default'];
-  
-  try {
-    const startTime = new Date(timestamp);
-    const now = new Date();
-    
-    // @ts-ignore
-    const durationInMs = now - startTime;
-    const durationInHours = durationInMs / (1000 * 60 * 60);
-    
-    const totalCost = durationInHours * hourlyRate;
-    
-    return totalCost;
-  } catch (error) {
-    console.error("Error calculating running cost:", error);
-    return null;
-  }
+  // Cost calculation temporarily removed
+  return null;
 };

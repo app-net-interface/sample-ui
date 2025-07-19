@@ -17,6 +17,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Type definitions
+export interface HandlerFunctions {
+    setSelectedView: (view: string) => void;
+    setLastUpdated: (date: Date) => void;
+    setIsModalOpen: (open: boolean) => void;
+    setSelectedAccountId: (id: string) => void;
+}
+
+export interface ItemHandler {
+    setSelectedItem: (item: any) => void;
+    setIsModalOpen: (open: boolean) => void;
+}
+
 export const handleButtonClick = async (
     name: string,
     fetchFunction: (() => Promise<any>) | undefined,
@@ -25,7 +38,7 @@ export const handleButtonClick = async (
     setLastUpdated: (date: Date) => void,
     setIsModalOpen: (open: boolean) => void,
     setSelectedAccountId: (id: string) => void
-) => {
+): Promise<void> => {
     setIsModalOpen(false);
     setSelectedAccountId(selectedAccountId);
     setSelectedView(name);
@@ -39,7 +52,7 @@ export const handleOpenModal = (
     item: any,
     setSelectedItem: (item: any) => void,
     setIsModalOpen: (open: boolean) => void
-) => {
+): void => {
     setSelectedItem(item);
     setIsModalOpen(true);
 };

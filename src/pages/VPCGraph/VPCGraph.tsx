@@ -29,7 +29,9 @@ import ReactFlow, {
   useReactFlow,
   Position,
   NodeTypes,
-  BackgroundVariant, // <-- Import BackgroundVariant
+  BackgroundVariant,
+  Panel,
+  ControlButton,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import ProviderButtons from '@/components/ProviderRegion/ProviderRegionBar';
@@ -44,6 +46,8 @@ import '@/components/GraphNodes/IconNode.css';
 import NodeDetailsPanel from '@/components/NodeDetailsPanel/NodeDetailsPanel'; // Import the new component
 import '@/components/NodeDetailsPanel/NodeDetailsPanel.css'; // Import its CSS
 import '@/css/flow-controls.css'; // Import modern controls styles
+import '@/css/flow-fullscreen.css'; // Import fullscreen styles
+import '@/css/vpc.css'; // Import VPC graph styles
 
 // *** Import DefaultLayout and Breadcrumb ***
 import DefaultLayout from '@/layout/DefaultLayout';
@@ -566,13 +570,14 @@ const VPCGraphInternal: React.FC = () => {
       </div>
 
       <div style={{
-        height: 'calc(100vh - 200px)',
+        height: 'calc(100vh - 120px)',
         width: '100%',
         border: '1px solid #ddd',
-        margin: '20px 0',
+        margin: '10px 0',
         position: 'relative',
-        overflow: 'auto'
-      }}>
+        overflow: 'auto',
+        borderRadius: '8px'
+      }} className="vpc-graph-container">
         {nodes.length > 0 ? (
           <ReactFlow
             nodes={nodes}
@@ -581,11 +586,33 @@ const VPCGraphInternal: React.FC = () => {
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
             nodesDraggable={true}
-            onNodeClick={handleNodeClick} // Ensure this is passed
-            onPaneClick={handlePaneClick} // Ensure this is passed
+            onNodeClick={handleNodeClick}
+            onPaneClick={handlePaneClick}
             key={selectedVpcId}
+            fitView
+            className="react-flow-full"
           >
-            <Controls className="modern-controls" />
+            <Controls className="modern-controls">
+              <ControlButton
+                onClick={() => {
+                  const elem = document.querySelector('.react-flow-full')?.parentElement;
+                  if (elem) {
+                    if (!document.fullscreenElement) {
+                      elem.requestFullscreen();
+                    } else {
+                      document.exitFullscreen();
+                    }
+                  }
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path
+                    fill="currentColor"
+                    d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+                  />
+                </svg>
+              </ControlButton>
+            </Controls>
             <Background 
               variant={BackgroundVariant.Dots} 
               gap={20} 

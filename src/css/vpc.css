@@ -93,3 +93,36 @@
     -ms-user-select: none;
     /* Internet Explorer/Edge */
 }
+
+/* VPC Graph Container Scrollbars */
+.vpc-graph-container {
+    /* Always show scrollbars */
+    overflow: scroll !important;
+    scrollbar-width: thin;  /* Firefox */
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;  /* Firefox */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styles */
+.vpc-graph-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.vpc-graph-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vpc-graph-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: 2px solid transparent;
+}
+
+.vpc-graph-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Corner where scrollbars meet */
+.vpc-graph-container::-webkit-scrollbar-corner {
+    background: transparent;
+}
