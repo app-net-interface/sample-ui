@@ -40,7 +40,6 @@ export const useFetchOverlapIPs = (
 	const [error, setError] = useState<any>(null);
 
 	const fetchVpcResourcesOverlappedIP = async () => {
-		console.log("Starting fetchVpcResourcesOverlappedIP");
 		setLoading(true);
 		try {
 			let vpcCIDRs: any[] = [];
@@ -53,7 +52,7 @@ export const useFetchOverlapIPs = (
 			}
 			
 			vpcCIDRs.forEach((primaryCIDR: any) => {
-				console.log("VPC Primary CIDR:", primaryCIDR.provider,primaryCIDR.accountId,primaryCIDR.id,primaryCIDR.cidrBlock);
+				//console.log("VPC Primary CIDR:", primaryCIDR.provider,primaryCIDR.accountId,primaryCIDR.id,primaryCIDR.cidrBlock);
 			});
 			// Format each subnet for compareCIDRLists
 			const formattedCIDRs = vpcCIDRs.map((item: any) => ({
@@ -76,13 +75,13 @@ export const useFetchOverlapIPs = (
 			setError(e);
 		} finally {
 			setLoading(false);
-			console.log("fetchVpcResourcesOverlappedIP completed");
+			//console.log("fetchVpcResourcesOverlappedIP completed");
 		}
 	};
 
 	// New helper function re-implementing the subnets fetch logic locally
 	function fetchForProvider(prov: string): Promise<any[]> {
-		console.log("Fetching primary VPC CIDRs for provider:", selectedProvider);
+		//console.log("Fetching primary VPC CIDRs for provider:", selectedProvider);
 		return new Promise((resolve, reject) => {
 			const request = new ListVPCRequest();
 			request.setProvider(prov);
