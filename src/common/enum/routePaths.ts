@@ -25,6 +25,7 @@ export enum RoutePaths {
   MULTI_CLOUD_INFRA_RESOURCE_DASHBOARD = "/multi-cloud-infra-resources",
   VPC_VIEW = "/vpc-view",
   VPC_GRAPH = "/vpc-graph",
+  VPC_CONNECTIONS = "/vpc-connections",
   VPC_CONNECTION_GRAPH = "/vpc-connection-graph",
 
   VPC_CONNECTION_DASHBOARD = "/vpc-connection-dashboard",

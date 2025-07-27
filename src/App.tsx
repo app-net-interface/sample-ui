@@ -48,6 +48,7 @@ import { VPCConnectionDashboard } from "@/components/views/vpc-connection-dashbo
 import MultiCloudInfra from "./pages/MultiCloudInfra/MultiCloudInfra";
 import VPCView from "./pages/VPCView/VPCView";
 import SecurityGroups from './pages/SecurityGroups/SecurityGroups';
+import { VPCConnections } from './pages/VPCConnections';
 import ClusterResources from "./pages/Kubernetes/Kubernetes"
 import ListNetworkDomain from "./pages/NetworkDomain/ListNetworkDomain";
 import { DefineNetworkDomain } from "@/components/views/define-network-domain";
@@ -64,7 +65,7 @@ import { MonitoringPolicy } from "./components/views/monitoring-policy/Monitorin
 // import SecurityGroups from "./pages/SecurityGroups/SecurityGroups";
 import Error404 from "./pages/404";
 import VPCGraph from "./pages/VPCGraph/VPCGraph";
-import VPCConnectionPage from "./pages/VPCGraph/VPCConnectionPage"
+import MultiVPCPage from "./pages/VPCGraph/Multi-VPC-Page"
 function App() {
 
   return (
@@ -79,7 +80,8 @@ function App() {
          {/* New VPCView route */}
          <Route path={RoutePaths.VPC_VIEW} element={<VPCView />} />
          <Route path={RoutePaths.VPC_GRAPH} element={<VPCGraph />} />
-         <Route path={RoutePaths.VPC_CONNECTION_GRAPH} element={<VPCConnectionPage />} />
+         <Route path={RoutePaths.VPC_CONNECTION_GRAPH} element={<MultiVPCPage />} />
+         <Route path={RoutePaths.VPC_CONNECTIONS} element={<VPCConnections />} />
 
 
 

@@ -41,7 +41,6 @@ import VMModal from '../../components/Modal/VMModal';
 import CIDROverlapModal from '@/components/Modal/CIDROverlapModal';
 import LoadBalancerModal from '../../components/Modal/LoadBalancerModal'; // ADD THIS
 import { VpcContextBar } from '@/components/VpcContextBar/VpcContextBar';
-import { setInfraSelectedRow } from '@/store/infra-resources-slice/infraResourcesSlice';
 
 import {
     useFetchVpcResourceSubnets,

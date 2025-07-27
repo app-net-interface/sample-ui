@@ -48,7 +48,6 @@ import '@/components/NodeDetailsPanel/NodeDetailsPanel.css'; // Import its CSS
 import '@/css/flow-controls.css'; // Import modern controls styles
 import '@/css/flow-fullscreen.css'; // Import fullscreen styles
 import '@/css/vpc.css'; // Import VPC graph styles
-
 // *** Import DefaultLayout and Breadcrumb ***
 import DefaultLayout from '@/layout/DefaultLayout';
 
@@ -159,6 +158,9 @@ const VPCGraphInternal: React.FC = () => {
     selectedAccountId,
     selectedRegion
   );
+
+
+  
 
   const nodeTypes: NodeTypes = useMemo(() => ({
     iconNode: IconNode,

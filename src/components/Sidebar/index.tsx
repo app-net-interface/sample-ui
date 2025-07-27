@@ -168,6 +168,10 @@ const Sidebar = ({
                       link: "/multi-cloud-infra-resources",
                     },
                     {
+                      text: "VPC Connections",
+                      link: "/vpc-connections",
+                    },
+                    {
                       text: "VPC Graph",
                       link: "/vpc-graph",
                     },
