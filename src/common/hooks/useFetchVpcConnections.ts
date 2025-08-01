@@ -26,6 +26,7 @@ import { BACKEND_API_PREFIX } from "@/common/constants";
 // Use import function from GRPC generated code for compatibility
 import { ListVpcConnectionsRequest } from "@/_proto/infra-sdk/output/cloud_pb";
 const { CloudProviderServiceClient } = require("@/_proto/infra-sdk/output/cloud_grpc_web_pb");
+const { VpcConnectionType } = require("@/_proto/infra-sdk/output/types_pb");
 
 const infraSdkResourcesClient = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
 
@@ -59,6 +60,7 @@ export const useFetchVpcConnections = (provider: string, accountId: string) => {
               labels[key] = value;
             });
 
+
             return {
               labels,
               id: connection.getId(),
@@ -72,10 +74,24 @@ export const useFetchVpcConnections = (provider: string, accountId: string) => {
               vpc_id_2: connection.getVpcId2(),
               vpc_2_account_id: connection.getVpc2AccountId(),
               vpc_2_region: connection.getVpc2Region(),
-              connection_type: connection.getConnectionType(),
+              connection_type: (() => {
+                const connType = connection.getConnectionType();
+                switch (connType) {
+                  case VpcConnectionType.VPC_CONNECTION_TYPE_PEERING:
+                    return 'peering';
+                  case VpcConnectionType.VPC_CONNECTION_TYPE_TRANSIT_GATEWAY:
+                    return 'transit_gateway';
+                  case VpcConnectionType.VPC_ENDPOINT:
+                    return 'private_link';
+                  case VpcConnectionType.TRANSIT_VPC:
+                    return 'transit_vpc';
+                  case VpcConnectionType.VPC_CONNECTION_TYPE_UNSPECIFIED:
+                  default:
+                    return 'unknown';
+                }
+              })(),
               status: connection.getStatus(),
-              created_at: connection.getCreatedAt(),
-              self_link: connection.getSelfLink(),
+        
               last_sync_time: connection.getLastSyncTime()
             };
           });
