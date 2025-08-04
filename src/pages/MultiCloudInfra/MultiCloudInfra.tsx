@@ -511,7 +511,7 @@ const MultiCloudInfra = () => {
                                         </div>
                                     )}
                                     <VpcModal
-                                        isModalOpen={isModalOpen}
+                                        isModalOpen={isModalOpen && selectedView === 'VPC'}
                                         onRequestClose={() => setIsModalOpen(false)}
                                         selectedVpc={selectedVpc}
                                     />
@@ -519,8 +519,10 @@ const MultiCloudInfra = () => {
                             );
                         case 'Security Group':
                             return (
-                                <div className="space-y-4">
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                <div>
+                                    {viewMode === 'table' ? (
+                                        <div className="space-y-4">
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                                         <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center cursor-pointer">Name</span>
                                         <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center cursor-pointer">ID</span>
                                         <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center cursor-pointer">Account ID</span>
@@ -551,6 +553,30 @@ const MultiCloudInfra = () => {
                                             <div className="text-center p-4 text-gray-500 dark:text-gray-400">No security groups loaded. Check provider/account selection or wait for data.</div>
                                         )}
                                     </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(sgSearch, sortConfig).map((group, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: group.name || group.id, isHeader: true },
+                                                        { label: 'ID', value: group.id, isMono: false },
+                                                        { label: 'Account', value: group.accountId, isMono: false },
+                                                        { label: 'VPC', value: group.vpcId || 'N/A', isMono: false },
+                                                        { label: 'Rules Count', value: (group.inboundRules?.length || 0) + (group.outboundRules?.length || 0), isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === group.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(group.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(group, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <SecurityGroupModal
                                         isModalOpen={isModalOpen && selectedView === 'Security Group'}
                                         onRequestClose={() => setIsModalOpen(false)}
@@ -561,7 +587,9 @@ const MultiCloudInfra = () => {
                         case 'Load Balancer':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
                                         <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
                                         <span onClick={() => handleSortClick('id')} className="w-1/6 px-2 py-2 text-center cursor-pointer">ID</span>
                                         <span onClick={() => handleSortClick('ipAddress')} className="w-1/6 px-2 py-2 text-center cursor-pointer">IP Address</span>
@@ -586,7 +614,7 @@ const MultiCloudInfra = () => {
                                                 <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.ipAddress || 'N/A'}</span>
                                                 <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.type || 'N/A'}</span>
                                                 <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.state || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{lb.vpcId || 'N/A'}</span>
+                                                <span className="w-1/6 px-2 py-2 flex text-center justify-center">{lb.vpcId || 'N/A'}</span>
                                             </div>
                                         ))}
                                         {lbSearch.length === 0 && searchTerm && (
@@ -596,6 +624,31 @@ const MultiCloudInfra = () => {
                                             <div className="text-center p-4 text-gray-500 dark:text-gray-400">No load balancers loaded. Check provider/account selection or wait for data.</div>
                                         )}
                                     </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(lbSearch, sortConfig).map((lb, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: lb.name || lb.id, isHeader: true },
+                                                        { label: 'ID', value: lb.id, isMono: false },
+                                                        { label: 'IP Address', value: lb.ipAddress || 'N/A', isMono: false },
+                                                        { label: 'Type', value: lb.type || 'N/A', isMono: false },
+                                                        { label: 'State', value: lb.state || 'N/A', isMono: false },
+                                                        { label: 'VPC', value: lb.vpcId || 'N/A', isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === lb.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(lb.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(lb, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <LoadBalancerModal
                                         isModalOpen={isModalOpen && selectedView === 'Load Balancer'}
                                         onRequestClose={() => setIsModalOpen(false)}
@@ -606,37 +659,60 @@ const MultiCloudInfra = () => {
                         case 'VM':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/6 px-4 py-2 text-center cursor-pointer">ID</span>
-                                        <span onClick={() => handleSortClick('state')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Status</span>
-                                        <span onClick={() => handleSortClick('accountId')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Account ID</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-4 py-2 text-center cursor-pointer">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedVms.map((row, key) => (
-                                            <div
-                                                key={key}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === row.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => setSelectedRow(row.id)}
-                                                onDoubleClick={() => handleOpenModal(row, setSelectedVpc, setIsModalOpen)}
-                                            >
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.name || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.id || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.state || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.accountId || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.vpcId || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.provider || 'N/A'}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/6 px-4 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('state')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Status</span>
+                                                <span onClick={() => handleSortClick('accountId')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Account ID</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-4 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                        {sortedVms.length === 0 && searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VMs found matching your search criteria.</div>
-                                        )}
-                                        {sortedVms.length === 0 && !searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VMs loaded. Check provider/account selection or wait for data.</div>
-                                        )}
-                                    </div>
+                                            <div>
+                                                {sortedVms.map((row, key) => (
+                                                    <div
+                                                        key={key}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === row.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => setSelectedRow(row.id)}
+                                                        onDoubleClick={() => handleOpenModal(row, setSelectedVpc, setIsModalOpen)}
+                                                    >
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.name || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.id || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.state || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.accountId || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.vpcId || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{row.provider || 'N/A'}</span>
+                                                    </div>
+                                                ))}
+                                                {sortedVms.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VMs found matching your search criteria.</div>
+                                                )}
+                                                {sortedVms.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VMs loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedVms.map((vm, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: vm.name || vm.id, isHeader: true },
+                                                        { label: 'ID', value: vm.id || 'N/A', isMono: false },
+                                                        { label: 'Status', value: vm.state || 'N/A', isMono: false },
+                                                        { label: 'Account', value: vm.accountId || 'N/A', isMono: false },
+                                                        { label: 'VPC', value: vm.vpcId || 'N/A', isMono: false },
+                                                        { label: 'Provider', value: vm.provider || 'N/A', isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === vm.id}
+                                                    onClick={() => setSelectedRow(vm.id)}
+                                                    onDoubleClick={() => handleOpenModal(vm, setSelectedVpc, setIsModalOpen)}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <VMModal
                                         isModalOpen={isModalOpen && selectedView === 'VM'}
                                         onRequestClose={() => setIsModalOpen(false)}
@@ -647,33 +723,65 @@ const MultiCloudInfra = () => {
                         case 'Subnet':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/4 px-2 py-2 text-center">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">ID</span>
-                                        <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-1 py-2 text-center">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(subnetSearch, sortConfig).map((group, idx) => (
-                                            <div
-                                                key={idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(group.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(group, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/5 px-2 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/5 px-4 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('accountId')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Account ID</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-1 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div>
+                                                {sortedData(subnetSearch, sortConfig).map((subnet, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === subnet.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(subnet.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(subnet, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{subnet.name || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{subnet.id}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{subnet.accountId}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{subnet.vpcId}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{subnet.provider}</span>
+                                                    </div>
+                                                ))}
+                                                {subnetSearch.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No subnets found matching your search criteria.</div>
+                                                )}
+                                                {subnetSearch.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No subnets loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(subnetSearch, sortConfig).map((subnet, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: subnet.name || subnet.id, isHeader: true },
+                                                        { label: 'ID', value: subnet.id, isMono: false },
+                                                        { label: 'Account', value: subnet.accountId, isMono: false },
+                                                        { label: 'VPC', value: subnet.vpcId, isMono: false },
+                                                        { label: 'Provider', value: subnet.provider, isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === subnet.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(subnet.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(subnet, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <SubnetModal
                                         isModalOpen={isModalOpen}
                                         onRequestClose={() => setIsModalOpen(false)}
@@ -684,33 +792,65 @@ const MultiCloudInfra = () => {
                         case "ACL":
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                                        <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(aclSearch, sortConfig).map((group, idx) => (
-                                            <div
-                                                key={idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(group.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(group, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center cursor-pointer">Account ID</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div>
+                                                {sortedData(aclSearch, sortConfig).map((acl, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === acl.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(acl.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(acl, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{acl.id}</span>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{acl.accountId}</span>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{acl.vpcId}</span>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{acl.provider}</span>
+                                                    </div>
+                                                ))}
+                                                {aclSearch.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No ACLs found matching your search criteria.</div>
+                                                )}
+                                                {aclSearch.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No ACLs loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(aclSearch, sortConfig).map((acl, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: acl.id, isHeader: true },
+                                                        { label: 'Account', value: acl.accountId, isMono: false },
+                                                        { label: 'VPC', value: acl.vpcId, isMono: false },
+                                                        { label: 'Provider', value: acl.provider, isMono: false },
+                                                        { label: 'Rules Count', value: (acl.inboundRules?.length || 0) + (acl.outboundRules?.length || 0), isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === acl.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(acl.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(acl, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <ACLModal
-                                        isModalOpen={isModalOpen}
+                                        isModalOpen={isModalOpen && selectedView === 'ACL'}
                                         onRequestClose={() => setIsModalOpen(false)}
                                         selectedACL={selectedVpc}
                                     />
@@ -719,35 +859,68 @@ const MultiCloudInfra = () => {
                         case "Route Table":
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center">ID</span>
-                                        <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center">Account ID</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/4 px-2 py-2 text-center">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(routeTableSearch, sortConfig).map((group, idx) => (
-                                            <div
-                                                key={idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(group.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(group, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.vpcId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('accountId')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Account ID</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div>
+                                                {sortedData(routeTableSearch, sortConfig).map((route, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === route.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(route.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(route, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{route.name || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{route.id}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{route.accountId}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{route.vpcId}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{route.provider}</span>
+                                                    </div>
+                                                ))}
+                                                {routeTableSearch.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No route tables found matching your search criteria.</div>
+                                                )}
+                                                {routeTableSearch.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No route tables loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(routeTableSearch, sortConfig).map((route, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: route.name || route.id, isHeader: true },
+                                                        { label: 'ID', value: route.id, isMono: false },
+                                                        { label: 'Account', value: route.accountId, isMono: false },
+                                                        { label: 'VPC', value: route.vpcId, isMono: false },
+                                                        { label: 'Provider', value: route.provider, isMono: false },
+                                                        { label: 'Routes Count', value: route.routes?.length || 0, isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === route.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(route.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(route, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <RouteTableModal
-                                        isModalOpen={isModalOpen}
+                                        isModalOpen={isModalOpen && selectedView === 'Route Table'}
                                         onRequestClose={() => setIsModalOpen(false)}
                                         selectedRouteTable={selectedVpc}
                                     />
@@ -756,43 +929,68 @@ const MultiCloudInfra = () => {
                         case "VPC Endpoint":
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/6 px-2 py-2 text-center cursor-pointer">ID</span>
-                                        <span onClick={() => handleSortClick('service')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Service</span>
-                                        <span onClick={() => handleSortClick('state')} className="w-1/6 px-2 py-2 text-center cursor-pointer">State</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-2 py-2 text-center cursor-pointer">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(vpcEndpointSearch, sortConfig).map((endpoint, idx) => (
-                                            <div
-                                                key={endpoint.id || idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === endpoint.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(endpoint.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(endpoint, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{endpoint.name || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{endpoint.id}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{endpoint.service || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{endpoint.state || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{endpoint.vpcId || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{endpoint.provider || 'N/A'}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('service')} className="w-1/5 px-2 py-2 text-center cursor-pointer">Service</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                        {vpcEndpointSearch.length === 0 && searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VPC endpoints found matching your search criteria.</div>
-                                        )}
-                                        {vpcResourceVpcEndpoints.length === 0 && !searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VPC endpoints loaded. Check provider/account selection or wait for data.</div>
-                                        )}
-                                    </div>
+                                            <div>
+                                                {sortedData(vpcResourceVpcEndpoints, sortConfig).map((endpoint, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === endpoint.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(endpoint.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(endpoint, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{endpoint.name || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{endpoint.id}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{endpoint.service || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{endpoint.vpcId || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{endpoint.provider || 'N/A'}</span>
+                                                    </div>
+                                                ))}
+                                                {vpcResourceVpcEndpoints.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VPC endpoints found matching your search criteria.</div>
+                                                )}
+                                                {vpcResourceVpcEndpoints.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No VPC endpoints loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(vpcResourceVpcEndpoints, sortConfig).map((endpoint, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: endpoint.name || endpoint.id, isHeader: true },
+                                                        { label: 'ID', value: endpoint.id, isMono: false },
+                                                        { label: 'Service', value: endpoint.service || 'N/A', isMono: false },
+                                                        { label: 'VPC', value: endpoint.vpcId || 'N/A', isMono: false },
+                                                        { label: 'Provider', value: endpoint.provider || 'N/A', isMono: false },
+                                                        { label: 'State', value: endpoint.state || 'N/A', isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === endpoint.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(endpoint.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(endpoint, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <VpcEndpointModal
-                                        isModalOpen={isModalOpen}
+                                        isModalOpen={isModalOpen && selectedView === 'VPC Endpoint'}
                                         onRequestClose={() => setIsModalOpen(false)}
                                         selectedVpcEndpoint={selectedVpc}
                                     />
@@ -801,148 +999,279 @@ const MultiCloudInfra = () => {
                         case 'NAT Gateway':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/6 px-2 py-2 text-center cursor-pointer">ID</span>
-                                        <span onClick={() => handleSortClick('state')} className="w-1/6 px-2 py-2 text-center cursor-pointer">State</span>
-                                        <span onClick={() => handleSortClick('publicIp')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Public IP</span>
-                                        <span onClick={() => handleSortClick('privateIp')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Private IP</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-2 py-2 text-center cursor-pointer">VPC ID</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(natGatewaysSearch, sortConfig).map((natGw, idx) => (
-                                            <div
-                                                key={natGw.id || idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === natGw.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(natGw.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(natGw, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.name || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.id}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.state || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.publicIp || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.privateIp || 'N/A'}</span>
-                                                <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.vpcId || 'N/A'}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/6 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/6 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('state')} className="w-1/6 px-2 py-2 text-center cursor-pointer">State</span>
+                                                <span onClick={() => handleSortClick('publicIp')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Public IP</span>
+                                                <span onClick={() => handleSortClick('privateIp')} className="w-1/6 px-2 py-2 text-center cursor-pointer">Private IP</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/6 px-2 py-2 text-center cursor-pointer">VPC ID</span>
                                             </div>
-                                        ))}
-                                        {natGatewaysSearch.length === 0 && searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No NAT gateways found matching your search criteria.</div>
-                                        )}
-                                        {vpcResourceNATGateways.length === 0 && !searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No NAT gateways loaded. Check provider/account selection or wait for data.</div>
-                                        )}
-                                    </div>
+                                            <div>
+                                                {sortedData(natGatewaysSearch, sortConfig).map((natGw, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === natGw.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(natGw.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(natGw, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.name || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.id}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.state || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.publicIp || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.privateIp || 'N/A'}</span>
+                                                        <span className="w-1/6 px-4 py-2 flex text-center justify-center">{natGw.vpcId || 'N/A'}</span>
+                                                    </div>
+                                                ))}
+                                                {natGatewaysSearch.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No NAT gateways found matching your search criteria.</div>
+                                                )}
+                                                {natGatewaysSearch.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No NAT gateways loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(natGatewaysSearch, sortConfig).map((natGw, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: natGw.name || natGw.id, isHeader: true },
+                                                        { label: 'ID', value: natGw.id, isMono: false },
+                                                        { label: 'State', value: natGw.state || 'N/A', isMono: false },
+                                                        { label: 'Public IP', value: natGw.publicIp || 'N/A', isMono: false },
+                                                        { label: 'Private IP', value: natGw.privateIp || 'N/A', isMono: false },
+                                                        { label: 'VPC', value: natGw.vpcId || 'N/A', isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === natGw.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(natGw.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(natGw, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                    <NatGatewayModal
+                                        isModalOpen={isModalOpen && selectedView === 'NAT Gateway'}
+                                        onRequestClose={() => setIsModalOpen(false)}
+                                        selectedNATGateway={selectedVpc}
+                                    />
                                 </div>
                             );
                         case 'Internet Gateway':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
-                                        <span onClick={() => handleSortClick('state')} className="w-1/5 px-2 py-2 text-center cursor-pointer">State</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/5 px-2 py-2 text-center cursor-pointer">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(igsSearch, sortConfig).map((igw, idx) => (
-                                            <div
-                                                key={igw.id || idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === igw.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(igw.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(igw, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.name || 'N/A'}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.id}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.state || 'N/A'}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.vpcId || 'N/A'}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.provider || 'N/A'}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('state')} className="w-1/5 px-2 py-2 text-center cursor-pointer">State</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                        {igsSearch.length === 0 && searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No internet gateways found matching your search criteria.</div>
-                                        )}
-                                        {vpcResourceInternetGateways.length === 0 && !searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No internet gateways loaded. Check provider/account selection or wait for data.</div>
-                                        )}
-                                    </div>
+                                            <div>
+                                                {sortedData(vpcResourceInternetGateways, sortConfig).map((igw, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === igw.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(igw.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(igw, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.name || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.id}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.state || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.vpcId || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{igw.provider || 'N/A'}</span>
+                                                    </div>
+                                                ))}
+                                                {vpcResourceInternetGateways.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No internet gateways found matching your search criteria.</div>
+                                                )}
+                                                {vpcResourceInternetGateways.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No internet gateways loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(vpcResourceInternetGateways, sortConfig).map((igw, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: igw.name || igw.id, isHeader: true },
+                                                        { label: 'ID', value: igw.id, isMono: false },
+                                                        { label: 'State', value: igw.state || 'N/A', isMono: false },
+                                                        { label: 'VPC', value: igw.vpcId || 'N/A', isMono: false },
+                                                        { label: 'Provider', value: igw.provider || 'N/A', isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === igw.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(igw.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(igw, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                    <InternetGatewayModal
+                                        isModalOpen={isModalOpen && selectedView === 'Internet Gateway'}
+                                        onRequestClose={() => setIsModalOpen(false)}
+                                        selectedIGW={selectedVpc}
+                                    />
                                 </div>
                             );
                         case 'Public IP':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
-                                        <span onClick={() => handleSortClick('state')} className="w-1/5 px-2 py-2 text-center cursor-pointer">State</span>
-                                        <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/5 px-2 py-2 text-center cursor-pointer">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(publicIPsSearch, sortConfig).map((ip, idx) => (
-                                            <div
-                                                key={ip.id || idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === ip.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(ip.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(ip, setSelectedVpc, setIsModalOpen);
-                                                }}
-                                            >
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{ip.name || 'N/A'}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{ip.id}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{ip.state || 'N/A'}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{ip.vpcId || 'N/A'}</span>
-                                                <span className="w-1/5 px-4 py-2 flex text-center justify-center">{ip.provider || 'N/A'}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('ip')} className="w-1/5 px-2 py-2 text-center cursor-pointer">IP Address</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                        {publicIPsSearch.length === 0 && searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No public IPs found matching your search criteria.</div>
-                                        )}
-                                        {vpcResourcePublicIPs.length === 0 && !searchTerm && (
-                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">No public IPs loaded. Check provider/account selection or wait for data.</div>
-                                        )}
-                                    </div>
+                                            <div>
+                                                {sortedData(vpcResourcePublicIPs, sortConfig).map((publicIP, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === publicIP.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(publicIP.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(publicIP, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{publicIP.name || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{publicIP.id}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{publicIP.ip || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{publicIP.vpcId || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{publicIP.provider || 'N/A'}</span>
+                                                    </div>
+                                                ))}
+                                                {vpcResourcePublicIPs.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No public IPs found matching your search criteria.</div>
+                                                )}
+                                                {vpcResourcePublicIPs.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No public IPs loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(vpcResourcePublicIPs, sortConfig).map((publicIP, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: publicIP.name || publicIP.id, isHeader: true },
+                                                        { label: 'ID', value: publicIP.id, isMono: false },
+                                                        { label: 'IP Address', value: publicIP.ip || 'N/A', isMono: true },
+                                                        { label: 'VPC', value: publicIP.vpcId || 'N/A', isMono: false },
+                                                        { label: 'Provider', value: publicIP.provider || 'N/A', isMono: false },
+                                                        { label: 'Status', value: publicIP.state || 'N/A', isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === publicIP.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(publicIP.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(publicIP, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                    <PublicIPModal
+                                        isModalOpen={isModalOpen && selectedView === 'Public IP'}
+                                        onRequestClose={() => setIsModalOpen(false)}
+                                        selectedPublicIp={selectedVpc}
+                                    />
                                 </div>
                             );
                         case 'Routers':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/4 px-4 py-2 text-center">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/4 px-2 py-2 text-center cursor-pointer">ID</span>
-                                        <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-1 py-2 text-center cursor-pointer">Account ID</span>
-                                        <span onClick={() => handleSortClick('provider')} className="w-1/4 px-1 py-2 text-center cursor-pointer">Provider</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(routerSearch, sortConfig).map((group, idx) => (
-                                            <div
-                                                key={idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === group.id ? 'bg-blue-100 dark:bg-gray-600' : 'bg-white dark:bg-gray-700'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(group.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(group, setSelectedVpc, setIsModalOpen);
-                                                }}>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.name}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.id}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.accountId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{group.provider}</span>
+                                    {viewMode === 'table' ? (
+                                        <div>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/5 px-4 py-2 text-center cursor-pointer">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/5 px-2 py-2 text-center cursor-pointer">ID</span>
+                                                <span onClick={() => handleSortClick('type')} className="w-1/5 px-2 py-2 text-center cursor-pointer">Type</span>
+                                                <span onClick={() => handleSortClick('vpcId')} className="w-1/5 px-2 py-2 text-center cursor-pointer">VPC ID</span>
+                                                <span onClick={() => handleSortClick('provider')} className="w-1/5 px-1 py-2 text-center cursor-pointer">Provider</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div>
+                                                {sortedData(vpcResourceRouters, sortConfig).map((router, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === router.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(router.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(router, setSelectedVpc, setIsModalOpen);
+                                                        }}
+                                                    >
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{router.name || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{router.id}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{router.type || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{router.vpcId || 'N/A'}</span>
+                                                        <span className="w-1/5 px-4 py-2 flex text-center justify-center">{router.provider || 'N/A'}</span>
+                                                    </div>
+                                                ))}
+                                                {vpcResourceRouters.length === 0 && searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No routers found matching your search criteria.</div>
+                                                )}
+                                                {vpcResourceRouters.length === 0 && !searchTerm && (
+                                                    <div className="text-center p-4 text-gray-500 dark:text-gray-400">No routers loaded. Check provider/account selection or wait for data.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(vpcResourceRouters, sortConfig).map((router, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: router.name || router.id, isHeader: true },
+                                                        { label: 'ID', value: router.id, isMono: false },
+                                                        { label: 'Type', value: router.type || 'N/A', isMono: false },
+                                                        { label: 'VPC', value: router.vpcId || 'N/A', isMono: false },
+                                                        { label: 'Provider', value: router.provider || 'N/A', isMono: false },
+                                                        { label: 'Routes Count', value: router.routes?.length || 0, isMono: false }
+                                                    ]}
+                                                    isSelected={selectedRow === router.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(router.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(router, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <RouterModal
-                                        isModalOpen={isModalOpen}
+                                        isModalOpen={isModalOpen && selectedView === 'Routers'}
                                         onRequestClose={() => setIsModalOpen(false)}
                                         selectedRouter={selectedVpc}
                                     />
