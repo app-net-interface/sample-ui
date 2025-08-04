@@ -174,33 +174,31 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
     };
 
     return (
-        <>
-            <div style={{ marginBottom: "10px", justifyContent: "space-between" }}>
-                {/* Provider buttons */}
-                <div className="flex justify-end">
-                    {[
-                        { name: 'AWS', enum: InfraResourceProvider.AWS },
-                        { name: 'GCP', enum: InfraResourceProvider.GCP },
-                        { name: 'Azure', enum: InfraResourceProvider.AZURE },
-                        { name: 'Cisco', enum: InfraResourceProvider.ENTERPRISE },
-                        { name: 'All Providers', enum: InfraResourceProvider.ALL_PROVIDERS },
-                    ].map((button) => (
-                        <button
-                            className={`dark:border-white dark:text-white button-blue text-lg px-3 py-2 ${selectedButton === button.enum ? 'selected' : ''}`}
-                            key={button.name}
-                            onClick={() => handleProviderSelect(button.enum)}
-                        >
-                            {button.name}
-                        </button>
-                    ))}
-                </div>
+        <div className="flex flex-col space-y-4">
+            {/* Provider buttons */}
+            <div className="flex flex-wrap gap-2">
+                {[
+                    { name: 'AWS', enum: InfraResourceProvider.AWS },
+                    { name: 'GCP', enum: InfraResourceProvider.GCP },
+                    { name: 'Azure', enum: InfraResourceProvider.AZURE },
+                    { name: 'Cisco', enum: InfraResourceProvider.ENTERPRISE },
+                    { name: 'All Providers', enum: InfraResourceProvider.ALL_PROVIDERS },
+                ].map((button) => (
+                    <button
+                        className={`dark:border-white dark:text-white button-blue text-sm px-3 py-2 rounded-md ${selectedButton === button.enum ? 'bg-blue-600 text-white' : ''}`}
+                        key={button.name}
+                        onClick={() => handleProviderSelect(button.enum)}
+                    >
+                        {button.name}
+                    </button>
+                ))}
             </div>
             {/* account id and region selection */}
-            <div className="flex flex-col w-1/6">
+            <div className="flex flex-col space-y-3">
                 <select
                     value={selectedAccountId}
                     onChange={e => handleAccountIdChange(e.target.value)}
-                    className="dark:bg-black select-field"
+                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-black focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="">Select Account ID</option>
                     {accountIds.map(account => <option key={account.key} value={account.value}>{account.label}</option>)}
@@ -209,7 +207,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                 <select
                     value={selectedRegion}
                     onChange={e => handleRegionChange(e.target.value)}
-                    className="dark:bg-black select-field"
+                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-black focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="">Select Region</option>
                     {regionNames.map(region => <option key={region.key} value={region.value}>{region.label}</option>)}
@@ -220,7 +218,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                     <select
                         value={selectedVpc}
                         onChange={e => handleVpcChange(e.target.value)}
-                        className="dark:bg-black select-field"
+                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-black focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="">Select VPC</option>
                         {vpcIds.map(vpc => (
@@ -231,7 +229,7 @@ const ProviderRegionBar: React.FC<ProviderButtonsProps> = ({ onProviderButtonCli
                     </select>
                 )}
             </div>
-        </>
+        </div>
     );
 };
 

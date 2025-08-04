@@ -42,7 +42,6 @@ import { ApplicationConnectionPolicies } from "@/components/views/applications-c
 import { ApplicationPolicyCreator } from "@/components/views/application-policy-creator";
 import { ApplicationPolicyAttachment } from "@/components/views/application-policy-attachment";
 import { LoginPage } from "@/components/views/login-page/LoginPage";
-// import { Dashboard } from "@/components/views/dashboard";
 import Home from './pages/Dashboard/Home';
 import { VPCConnectionDashboard } from "@/components/views/vpc-connection-dashboard";
 import MultiCloudInfra from "./pages/MultiCloudInfra/MultiCloudInfra";
@@ -80,7 +79,6 @@ function App() {
          {/* New VPCView route */}
          <Route path={RoutePaths.VPC_VIEW} element={<VPCView />} />
          <Route path={RoutePaths.VPC_GRAPH} element={<VPCGraph />} />
-         <Route path={RoutePaths.VPC_CONNECTION_GRAPH} element={<MultiVPCPage />} />
          <Route path={RoutePaths.VPC_CONNECTIONS} element={<VPCConnections />} />
 
 

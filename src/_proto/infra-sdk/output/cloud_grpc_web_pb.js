@@ -1244,6 +1244,67 @@ proto.infra.CloudProviderServicePromiseClient.prototype.listVPNConcentrators =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
+ *   !proto.infra.GetVpcConnectionRequest,
+ *   !proto.infra.GetVpcConnectionResponse>}
+ */
+const methodDescriptor_CloudProviderService_GetVPCConnection = new grpc.web.MethodDescriptor(
+  '/infra.CloudProviderService/GetVPCConnection',
+  grpc.web.MethodType.UNARY,
+  proto.infra.GetVpcConnectionRequest,
+  proto.infra.GetVpcConnectionResponse,
+  /**
+   * @param {!proto.infra.GetVpcConnectionRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.infra.GetVpcConnectionResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.infra.GetVpcConnectionRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.infra.GetVpcConnectionResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.infra.GetVpcConnectionResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.infra.CloudProviderServiceClient.prototype.getVPCConnection =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/infra.CloudProviderService/GetVPCConnection',
+      request,
+      metadata || {},
+      methodDescriptor_CloudProviderService_GetVPCConnection,
+      callback);
+};
+
+
+/**
+ * @param {!proto.infra.GetVpcConnectionRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.infra.GetVpcConnectionResponse>}
+ *     Promise that resolves to the response
+ */
+proto.infra.CloudProviderServicePromiseClient.prototype.getVPCConnection =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/infra.CloudProviderService/GetVPCConnection',
+      request,
+      metadata || {},
+      methodDescriptor_CloudProviderService_GetVPCConnection);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
  *   !proto.infra.ListVpcConnectionsRequest,
  *   !proto.infra.ListVpcConnectionsResponse>}
  */
@@ -1421,6 +1482,67 @@ proto.infra.CloudProviderServicePromiseClient.prototype.getInstanceConnectivityG
       request,
       metadata || {},
       methodDescriptor_CloudProviderService_GetInstanceConnectivityGraph);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.infra.GetVpcConnectionGraphRequest,
+ *   !proto.infra.GetVpcConnectionGraphResponse>}
+ */
+const methodDescriptor_CloudProviderService_GetVpcConnectionGraph = new grpc.web.MethodDescriptor(
+  '/infra.CloudProviderService/GetVpcConnectionGraph',
+  grpc.web.MethodType.UNARY,
+  proto.infra.GetVpcConnectionGraphRequest,
+  proto.infra.GetVpcConnectionGraphResponse,
+  /**
+   * @param {!proto.infra.GetVpcConnectionGraphRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.infra.GetVpcConnectionGraphResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.infra.GetVpcConnectionGraphRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.infra.GetVpcConnectionGraphResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.infra.GetVpcConnectionGraphResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.infra.CloudProviderServiceClient.prototype.getVpcConnectionGraph =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/infra.CloudProviderService/GetVpcConnectionGraph',
+      request,
+      metadata || {},
+      methodDescriptor_CloudProviderService_GetVpcConnectionGraph,
+      callback);
+};
+
+
+/**
+ * @param {!proto.infra.GetVpcConnectionGraphRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.infra.GetVpcConnectionGraphResponse>}
+ *     Promise that resolves to the response
+ */
+proto.infra.CloudProviderServicePromiseClient.prototype.getVpcConnectionGraph =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/infra.CloudProviderService/GetVpcConnectionGraph',
+      request,
+      metadata || {},
+      methodDescriptor_CloudProviderService_GetVpcConnectionGraph);
 };
 
 

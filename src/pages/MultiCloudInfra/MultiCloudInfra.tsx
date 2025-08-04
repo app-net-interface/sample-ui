@@ -21,9 +21,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/store/store";
+import React, { useEffect, useState, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import ProviderButtons from '@/components/ProviderRegion/ProviderRegionBar';
 import DefaultLayout from '../../layout/DefaultLayout';
@@ -41,6 +42,7 @@ import VMModal from '../../components/Modal/VMModal';
 import CIDROverlapModal from '@/components/Modal/CIDROverlapModal';
 import LoadBalancerModal from '../../components/Modal/LoadBalancerModal'; // ADD THIS
 import { VpcContextBar } from '@/components/VpcContextBar/VpcContextBar';
+import { ResourceCard } from '@/components/common/ResourceCard';
 
 import {
     useFetchVpcResourceSubnets,
@@ -95,7 +97,10 @@ interface VPC {
     compliant?: boolean;
 }
 
+type ViewMode = 'table' | 'card';
+
 const MultiCloudInfra = () => {
+    const [viewMode, setViewMode] = useState<ViewMode>('card');
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedVpc, setSelectedVpc] = useState<VPC | null>(null);
@@ -111,7 +116,7 @@ const MultiCloudInfra = () => {
     const dispatch = useDispatch();
 
     const { vpcs } = useSelector((state: RootState) => state.infraResources);
-    const { selectedProvider, selectedAccountId, selectedRegion } = useSelector((state: RootState) => state.selectedResources);
+    const { selectedProvider, selectedAccountId, selectedRegion = '' } = useSelector((state: RootState) => state.selectedResources);
     const [previousAccountId, setPreviousAccountId] = useState(selectedAccountId);
 
     const { vpcResourceVms, fetchVpcResourcesVms } = useFetchVpcResourceVms(selectedProvider, '', selectedVpcId, selectedAccountId);
@@ -350,18 +355,46 @@ const MultiCloudInfra = () => {
     return (
         <DefaultLayout>
             <Breadcrumb pageName="Multi-cloud Infrastructure Resources" />
-            <div className="flex justify-between">
-                <div className="flex flex-col w-1/3">
-                    <input
-                        type="text"
-                        placeholder={searchPlaceholder}
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="input-field dark:bg-black"
-                        disabled={selectedView === 'Overlapping IPs'}
-                    />
+            <div className="flex flex-col space-y-4 mb-6">
+                <div className="flex flex-wrap items-start gap-4">
+                    <div className="flex-1 min-w-[300px] max-w-2xl">
+                        <div className="flex items-center gap-4">
+                            <input
+                                type="text"
+                                placeholder={searchPlaceholder}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="input-field w-full dark:bg-black"
+                                disabled={selectedView === 'Overlapping IPs'}
+                            />
+                            <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 flex-shrink-0">
+                                <button
+                                    onClick={() => setViewMode('table')}
+                                    className={`p-2 rounded-md transition-all duration-200 ${
+                                        viewMode === 'table'
+                                            ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                                    }`}
+                                >
+                                    <TableCellsIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('card')}
+                                    className={`p-2 rounded-md transition-all duration-200 ${
+                                        viewMode === 'card'
+                                            ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                                    }`}
+                                >
+                                    <Squares2X2Icon className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <ProviderButtons onProviderButtonClick={handleVPCView}></ProviderButtons>
+                <div className="flex justify-end">
+                    <ProviderButtons onProviderButtonClick={handleVPCView} />
+                </div>
             </div>
             
             <VpcContextBar 
@@ -424,31 +457,59 @@ const MultiCloudInfra = () => {
                         case 'VPC':
                             return (
                                 <div>
-                                    <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
-                                        <span onClick={() => handleSortClick('name')} className="w-1/4 px-1 py-2 text-center">Name</span>
-                                        <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">VPC ID</span>
-                                        <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
-                                        <span onClick={() => handleSortClick('region')} className="w-1/4 px-1 py-2 text-center">Region</span>
-                                    </div>
-                                    <div>
-                                        {sortedData(vpcSearch, sortConfig).map((vpc, idx) => (
-                                            <div
-                                                key={idx}
-                                                className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === vpc.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
-                                                onClick={() => {
-                                                    setSelectedRow(vpc.id);
-                                                    setSelectedVpcId(vpc.id);
-                                                }}
-                                                onDoubleClick={() => {
-                                                    handleOpenModal(vpc, setSelectedVpc, setIsModalOpen);
-                                                }}>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.name}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.id}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.accountId}</span>
-                                                <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.region}</span>
+                                    {viewMode === 'table' ? (
+                                        <>
+                                            <div className="dark:bg-black dark:border-black border-b border-1 border-[#E5E7EB] table-header flex justify-between text-left text-sm font-medium text-gray-700 rounded-lg">
+                                                <span onClick={() => handleSortClick('name')} className="w-1/4 px-1 py-2 text-center">Name</span>
+                                                <span onClick={() => handleSortClick('id')} className="w-1/4 px-4 py-2 text-center">VPC ID</span>
+                                                <span onClick={() => handleSortClick('accountId')} className="w-1/4 px-2 py-2 text-center">Account ID</span>
+                                                <span onClick={() => handleSortClick('region')} className="w-1/4 px-1 py-2 text-center">Region</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div>
+                                                {sortedData(vpcSearch, sortConfig).map((vpc, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`unselectable cursor-pointer dark:bg-black dark:text-white flex items-center justify-between text-left text-sm font-medium text-gray-700 rounded-lg my-2 p-4 shadow ${selectedRow === vpc.id ? 'bg-blue-100 dark:bg-[#00437b]' : 'bg-white dark:bg-black'}`}
+                                                        onClick={() => {
+                                                            setSelectedRow(vpc.id);
+                                                            setSelectedVpcId(vpc.id);
+                                                        }}
+                                                        onDoubleClick={() => {
+                                                            handleOpenModal(vpc, setSelectedVpc, setIsModalOpen);
+                                                        }}>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.name}</span>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.id}</span>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.accountId}</span>
+                                                        <span className="w-1/4 px-4 py-2 flex text-center justify-center">{vpc.region}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                                            {sortedData(vpcSearch, sortConfig).map((vpc, idx) => (
+                                                <ResourceCard
+                                                    key={idx}
+                                                    fields={[
+                                                        { label: '', value: vpc.name || vpc.id, isHeader: true },
+                                                        { label: 'ID', value: vpc.id, isMono: false },
+                                                        { label: 'Account', value: vpc.accountId, isMono: false },
+                                                        { label: 'Region', value: vpc.region },
+                                                        { label: 'IPv4 CIDR', value: vpc.ipv4 || 'N/A', isMono: false },
+                                                        vpc.ipv6 ? { label: 'IPv6 CIDR', value: vpc.ipv6, isMono: false } : null,
+                                                    ].filter(Boolean) as any[]}
+                                                    isSelected={selectedRow === vpc.id}
+                                                    onClick={() => {
+                                                        setSelectedRow(vpc.id);
+                                                        setSelectedVpcId(vpc.id);
+                                                    }}
+                                                    onDoubleClick={() => {
+                                                        handleOpenModal(vpc, setSelectedVpc, setIsModalOpen);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                     <VpcModal
                                         isModalOpen={isModalOpen}
                                         onRequestClose={() => setIsModalOpen(false)}
