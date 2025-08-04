@@ -29,87 +29,17 @@ import { CloudProviderServiceClient } from "@/_proto/infra-sdk/output/cloud_grpc
 
 const client = new CloudProviderServiceClient(BACKEND_API_PREFIX, null, null);
 
-export interface VpcInternalGraphData {
+export interface VpcGraphData { // Added export here
   nodes: Node[];
   edges: Edge[];
-  accountId: string;
-  region: string;
-  provider: string;
-  labels: Record<string, string>;
-  lastSyncTime: string;
 }
 
-export interface VpcGraphData {
-  nodes: Node[];
-  edges: Edge[];
-  sourceVpcGraph: VpcInternalGraphData | null;
-  destVpcGraph: VpcInternalGraphData | null;
-  accountId: string;
-  region: string;
-  provider: string;
-  labels: Record<string, string>;
-  lastSyncTime: string;
-}
-
-const getNodePosition = (index: number, totalNodes: number, isInternalGraph: boolean = false): { x: number; y: number } => {
-  // For internal graphs, use a smaller radius and offset
-  const baseRadius = isInternalGraph ? 150 : 300;
-  const xOffset = isInternalGraph ? 200 : 400;
-  const yOffset = isInternalGraph ? 100 : 200;
-  
-  const radius = baseRadius + Math.floor(index / 10) * 100;
+const getNodePosition = (index: number, totalNodes: number): { x: number; y: number } => {
+  const radius = 300 + Math.floor(index / 10) * 100;
   const angle = (index / Math.min(totalNodes, 10)) * 2 * Math.PI;
-  
   return {
-    x: radius * Math.cos(angle) + xOffset,
-    y: radius * Math.sin(angle) + yOffset,
-  };
-};
-
-const parseVpcInternalGraph = (internalGraph: any, prefix: string = ''): VpcInternalGraphData => {
-  const protoNodes = internalGraph.getNodesList() || [];
-  const protoEdges = internalGraph.getEdgesList() || [];
-  const labelsMap = internalGraph.getLabelsMap();
-  const labels: Record<string, string> = {};
-  
-  labelsMap?.forEach((value: string, key: string) => {
-    labels[key] = value;
-  });
-
-  const nodes: Node[] = protoNodes.map((node: any, index: number) => ({
-    id: prefix + node.getId(),
-    data: {
-      label: `${node.getResourceType()}: ${node.getNodeLabel() || node.getId()}`,
-      type: node.getResourceType(),
-      originalData: node.toObject(),
-    },
-    position: getNodePosition(index, protoNodes.length, true),
-    style: {
-      background: '#4a90e2',
-      color: 'white',
-      border: '1px solid #357abd',
-      padding: '10px',
-      borderRadius: '3px'
-    },
-  }));
-
-  const edges: Edge[] = protoEdges.map((edge: any) => ({
-    id: prefix + `e-${edge.getSourceNodeId()}-${edge.getTargetNodeId()}`,
-    source: prefix + edge.getSourceNodeId(),
-    target: prefix + edge.getTargetNodeId(),
-    label: edge.getRelationshipType(),
-    animated: true,
-    style: { stroke: '#6c757d' },
-  }));
-
-  return {
-    nodes,
-    edges,
-    accountId: internalGraph.getAccountId(),
-    region: internalGraph.getRegion(),
-    provider: internalGraph.getProvider(),
-    labels,
-    lastSyncTime: internalGraph.getLastSyncTime(),
+    x: radius * Math.cos(angle) + 400,
+    y: radius * Math.sin(angle) + 200,
   };
 };
 
@@ -118,19 +48,7 @@ export const useFetchVpcGraphResource = (
   accountId: string,
   region: string
 ) => {
-  const initialGraphState: VpcGraphData = {
-    nodes: [],
-    edges: [],
-    sourceVpcGraph: null,
-    destVpcGraph: null,
-    accountId: '',
-    region: '',
-    provider: '',
-    labels: {},
-    lastSyncTime: ''
-  };
-
-  const [vpcGraphData, setVpcGraphData] = useState<VpcGraphData>(initialGraphState);
+  const [vpcGraphData, setVpcGraphData] = useState<VpcGraphData>({ nodes: [], edges: [] });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
 
@@ -138,98 +56,105 @@ export const useFetchVpcGraphResource = (
     console.log(`[Hook] fetchVpcGraph called with vpcId: ${vpcId}, provider: ${provider}, account: ${accountId}, region: ${region}`);
     setIsLoading(true);
     setError(null);
-    setVpcGraphData(initialGraphState);
+    setVpcGraphData({ nodes: [], edges: [] });
 
+    // Use the directly imported constructor
+    // @ts-ignore - Ignore TS error for constructor if it persists
     const req = new GetVpcConnectivityGraphRequest();
     req.setProvider(provider);
     req.setAccountId(accountId);
     req.setRegion(region);
     req.setVpcId(vpcId);
+    console.log("[Hook] Sending GetVpcConnectivityGraphRequest:", req.toObject());
 
     return new Promise<void>((resolve, reject) => {
-      client.getVpcConnectivityGraph(req, {}, (err: any, response: any) => {
+      console.log("[Hook] Attempting to call client.getVpcConnectivityGraph...");
+      // Use the directly imported types in the callback signature
+      // @ts-ignore - Ignore TS error for types if they persist
+      client.getVpcConnectivityGraph(req, {}, (err: any, response: GetVpcConnectivityGraphResponse | null) => {
+        console.log("[Hook] client.getVpcConnectivityGraph callback executed.");
         setIsLoading(false);
         if (err) {
           console.error("[Hook] Error in getVpcConnectivityGraph:", err);
           setError(err);
           reject(err);
-          return;
-        }
+        } else if (response) {
+          console.log("[Hook] Received GetVpcConnectivityGraphResponse:", response.toObject());
 
-        if (!response) {
-          const error = new Error("[Hook] Received null response from getVpcConnectivityGraph");
-          setError(error);
-          reject(error);
-          return;
-        }
+          const protoNodes = response.getNodesList() || [];
+          const protoEdges = response.getEdgesList() || [];
 
-        try {
-          // Parse main graph nodes and edges
-          const mainNodes = response.getNodesList() || [];
-          const mainEdges = response.getEdgesList() || [];
-          
-          // Parse source and destination VPC internal graphs
-          const srcVpcGraphProto = response.getSrcVpcGraph();
-          const destVpcGraphProto = response.getDestVpcGraph();
+          // @ts-ignore
+          const nodes: Node[] = protoNodes.map((node: VpcGraphNode, index: number) => {
+            if (index === 0) {
+              console.log("[Hook] Inspecting first node object (raw JS):", node.toObject());
+            }
 
-          // Parse labels
-          const labelsMap = response.getLabelsMap();
-          const labels: Record<string, string> = {};
-          labelsMap?.forEach((value: string, key: string) => {
-            labels[key] = value;
+            // *** Use getResourceType() based on types_pb.js ***
+            const nodeType = node.getResourceType ? node.getResourceType() : 'UnknownType';
+            const nodeLabel = node.getNodeLabel ? node.getNodeLabel() : ''; // Keep assuming node_label for now
+            const nodeId = node.getId ? node.getId() : `fallback-id-${index}`;
+
+            // Log warnings if functions still don't exist (for debugging)
+            if (typeof node.getResourceType !== 'function' && index === 0) {
+              console.warn("[Hook] node.getResourceType() is not a function on node:", node);
+            }
+            if (typeof node.getNodeLabel !== 'function' && index === 0) {
+              console.warn("[Hook] node.getNodeLabel() is not a function on node:", node);
+            }
+            if (typeof node.getId !== 'function' && index === 0) {
+              console.warn("[Hook] node.getId() is not a function on node:", node);
+            }
+
+            return {
+              id: nodeId,
+              data: {
+                label: `${nodeType}: ${nodeLabel || nodeId}`,
+                // *** Store the original node data here ***
+                originalData: node.toObject ? node.toObject() : { error: "Could not get raw data" },
+              },
+              position: getNodePosition(index, protoNodes.length),
+              style: { background: '#5bc0de', color: 'white', border: '1px solid #2e6da4', padding: '10px', borderRadius: '3px' },
+            };
           });
 
-          // Process main graph nodes
-          const nodes: Node[] = mainNodes.map((node: any, index: number) => ({
-            id: node.getId(),
-            data: {
-              label: `${node.getNodeType()}: ${node.getName() || node.getId()}`,
-              type: node.getNodeType(),
-              originalData: node.toObject(),
-            },
-            position: getNodePosition(index, mainNodes.length),
-            style: {
-              background: '#5bc0de',
-              color: 'white',
-              border: '1px solid #2e6da4',
-              padding: '10px',
-              borderRadius: '3px'
-            },
-          }));
+          // @ts-ignore - Ignore TS error for types if they persist
+          const edges: Edge[] = protoEdges.map((edge: VpcGraphEdge, index: number) => {
+            // *** Use getRelationshipType() for the edge label ***
+            const sourceId = edge.getSourceNodeId ? edge.getSourceNodeId() : '';
+            const targetId = edge.getTargetNodeId ? edge.getTargetNodeId() : '';
+            const edgeLabel = edge.getRelationshipType ? edge.getRelationshipType() : ''; // Changed from getLabel/getEdgeLabel
 
-          // Process main graph edges
-          const edges: Edge[] = mainEdges.map((edge: any) => ({
-            id: `e-${edge.getSourceId()}-${edge.getTargetId()}`,
-            source: edge.getSourceId(),
-            target: edge.getTargetId(),
-            label: edge.getConnectionType(),
-            animated: true,
-            style: { stroke: '#6c757d' },
-          }));
+            // Log warnings if functions still don't exist (for debugging)
+            if (typeof edge.getSourceNodeId !== 'function' && index === 0) {
+              console.warn("[Hook] edge.getSourceNodeId() is not a function on edge:", edge);
+            }
+            if (typeof edge.getTargetNodeId !== 'function' && index === 0) {
+              console.warn("[Hook] edge.getTargetNodeId() is not a function on edge:", edge);
+            }
+            // Updated warning check
+            if (typeof edge.getRelationshipType !== 'function' && index === 0) {
+              console.warn("[Hook] edge.getRelationshipType() is not a function on edge:", edge);
+            }
 
-          // Parse internal graphs if they exist
-          const sourceVpcGraph = srcVpcGraphProto ? parseVpcInternalGraph(srcVpcGraphProto, 'src-') : null;
-          const destinationVpcGraph = destVpcGraphProto ? parseVpcInternalGraph(destVpcGraphProto, 'dst-') : null;
+            return {
+              id: `e-${sourceId}-${targetId}-${edgeLabel || index}`, // Use edgeLabel in ID
+              source: sourceId,
+              target: targetId,
+              label: edgeLabel, // Use the retrieved edgeLabel
+              animated: true,
+              style: { stroke: '#6c757d' },
+            };
+          });
 
-          const graphData: VpcGraphData = {
-            nodes,
-            edges,
-            sourceVpcGraph,
-            destVpcGraph: destinationVpcGraph,
-            accountId: response.getAccountId(),
-            region: response.getRegion(),
-            provider: response.getProvider(),
-            labels,
-            lastSyncTime: response.getLastSyncTime()
-          };
-
-          console.log("Parsed VPC Graph data:", graphData);
-          setVpcGraphData(graphData);
+          console.log("Parsed VPC Graph data:", { nodes, edges });
+          setVpcGraphData({ nodes, edges });
           resolve();
-        } catch (parseError) {
-          console.error("[Hook] Error parsing VPC graph response:", parseError);
-          setError(parseError);
-          reject(parseError);
+        } else {
+          const unknownError = new Error("[Hook] Received null response from getVpcConnectivityGraph");
+          console.error(unknownError);
+          setError(unknownError);
+          reject(unknownError);
         }
       });
     });
